@@ -1,7 +1,6 @@
 import React from 'react';
 import { Image, Text, View, ImageBackground, Pressable } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons'; // Import đúng
-import { Route } from '@react-navigation/native';
 import { styled } from 'nativewind';
 import { router } from 'expo-router';
 
@@ -52,7 +51,7 @@ const HomeScreen = () => {
 
           <StyledPressable className="w-[30%] m-[1.66%] p-3 bg-gray-100 rounded-lg items-center"
                 onPress={() => console.log("tap")}>
-            <FontAwesome5 name="check" size={20} color="#007BFF" />
+            <FontAwesome5 name="checkcircleo" size={20} color="#007BFF" />
             <StyledText>Check-in</StyledText>
           </StyledPressable>
 
