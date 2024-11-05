@@ -12,7 +12,7 @@ function AppWrapper() {
   return (
     <Stack>
       <Stack.Screen name="index"  options={{ headerShown: false }} />
-      <Stack.Screen name="PersonalScreen"  options={{ headerShown: false }} />
+      <Stack.Screen name="ProfileScreen"  options={{ headerShown: false }} />
       <Stack.Screen name="auth/LoginScreen"  options={{ headerShown: false }} />
     </Stack>
   );

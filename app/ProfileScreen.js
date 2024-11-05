@@ -1,9 +1,10 @@
 import React from "react";
 import { Text, View, TouchableOpacity } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+
 import { useRouter } from "expo-router";
-import { logoutAction } from "../(redux)/authSlice";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { logoutAction } from "./(redux)/authSlice";
+import ProtectedRoute from "../components/ProtectedRoute";
 const PersonalScreen = () => {
   const router = useRouter(); 
   const dispatch = useDispatch();
@@ -11,7 +12,7 @@ const PersonalScreen = () => {
 
   const handleLogout = () => {
     dispatch(logoutAction());
-    router.push("/auth/LoginScreen");
+    router.push("/");
   };
 
   return (

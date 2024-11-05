@@ -29,7 +29,7 @@ const LoginScreen = () => {
   const dispatch = useDispatch();
   const mutation = useMutation({
     mutationFn: loginUser,
-    mutationKey: ["login"],
+    mutationKey: ["LoginScreen"],
   });
   // console.log(mutation);
   const user = useSelector((state) => state.auth.user);
