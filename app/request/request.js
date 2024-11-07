@@ -1,112 +1,163 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ImageBackground, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, FlatList, Platform, ScrollView, KeyboardAvoidingView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { router } from 'expo-router';
 
-const requestData = [
-  {
-    type: 'Về sớm',
-    date: '23/10/2024',
-    time: '08:00',
-    reason: 'Em xin phép về sớm do có việc cá nhân',
-    status: 'Completed',
-  },
-  {
-    type: 'Đi muộn',
-    date: '23/10/2024',
-    time: '08:00',
-    reason: 'Em xin phép đi muộn do có việc cá nhân',
-    status: 'Ignored',
-  },
-];
+const Request = ({ navigation }) => {
+  const [selectedStatus, setSelectedStatus] = useState('All');
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fromDate, setFromDate] = useState(new Date());
+  const [toDate, setToDate] = useState(new Date());
+  const [showFromPicker, setShowFromPicker] = useState(false);
+  const [showToPicker, setShowToPicker] = useState(false);
 
-export default function RequestScreen() {
-  const router = useRouter();
-  const [selectedTab, setSelectedTab] = useState('All');
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const data = ['DEV', 'HR', 'HCNS', 'BM', 'Media', 'Marketing', 'Varldens'];
+        setDepartments(data);
+        setSelectedDepartment(data[0]);
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDepartments();
+  }, []);
 
-  const handleDateChange = (event, date) => {
-    const currentDate = date || selectedDate;
-    setShowDatePicker(Platform.OS === 'ios'); // Chỉ hiển thị picker liên tục trên iOS
-    if (currentDate > new Date()) {
-      setSelectedDate(currentDate);
-    }
-  };
+  const leaveRequests = [
+    { type: 'Về sớm', createdAt: '23/10/24 16:47', date: '23/10/2024', time: '08:00', reason: 'Em xin phép về sớm do có việc cá nhân', status: 'Completed' },
+    { type: 'Đi muộn', createdAt: '23/10/24 16:47', date: '23/10/2024', time: '08:00', reason: 'Em xin phép về sớm do có việc cá nhân', status: 'Ignored' },
+    { type: 'Nghỉ phép', createdAt: '24/10/24 09:12', date: '25/10/2024', time: 'Cả ngày', reason: 'Nghỉ phép', status: 'Pending' },
+    { type: 'Về sớm', createdAt: '24/10/24 14:35', date: '24/10/2024', time: '17:00', reason: 'Có việc gia đình', status: 'Approved' },
+    { type: 'Đi muộn', createdAt: '25/10/24 11:00', date: '26/10/2024', time: '10:00', reason: 'Khám bệnh', status: 'Rejected' },
+    { type: 'Nghỉ phép', createdAt: '26/10/24 15:20', date: '27/10/2024', time: 'Cả ngày', reason: 'Du lịch', status: 'Canceled' },
+  ];
 
-  const renderItem = ({ item }) => (
-    <View className="p-4 bg-white shadow-sm rounded-lg mb-4 border border-gray-200">
-      <Text className="text-base font-bold text-textPrimary">{item.type}</Text>
-      <View className="flex-row justify-between">
-        <Text className="text-sm text-gray-500">Ngày: {item.date}</Text>
-        <Text className={`text-sm font-bold ${item.status === 'Completed' ? 'text-blue-500' : 'text-red-500'}`}>
+  const renderLeaveRequest = ({ item }) => (
+    <View className="bg-white rounded-lg p-4 mb-4 shadow-md">
+      <View className="flex-row justify-between items-center mb-2">
+        <Text className="font-bold text-lg text-gray-800">Loại: {item.type}</Text>
+        <Text className={`px-2 py-1 rounded-full text-white ${item.status === 'Completed' ? 'bg-green-500' : item.status === 'Ignored' ? 'bg-red-500' : item.status === 'Pending' ? 'bg-yellow-500' : item.status === 'Approved' ? 'bg-blue-500' : item.status === 'Rejected' ? 'bg-gray-500' : item.status === 'Canceled' ? 'bg-orange-500' : ''}`}>
           {item.status}
         </Text>
       </View>
-      <Text className="text-sm text-gray-500">Thời gian: {item.time}</Text>
-      <Text className="text-sm text-gray-500">Lý do: {item.reason}</Text>
+      <View className="space-y-1">
+        <Text className="text-gray-600">TG tạo: {item.createdAt}</Text>
+        <Text className="text-gray-600">Ngày: {item.date}</Text>
+        <Text className="text-gray-600">Thời gian: {item.time}</Text>
+        <Text className="text-gray-600">Lý do: {item.reason}</Text>
+      </View>
     </View>
   );
 
-  return (
-    <ImageBackground
-      source={require('@/assets/images/Frame_48095964.png')}
-      className="w-full h-56 justify-start items-start"
-    >
-      <View className="flex-1 bg-background p-6">
-        <Text className="text-xl font-bold text-textPrimary mb-4">Xin phép</Text>
-        
-        <View className="flex-row justify-between items-center bg-white p-2 rounded-lg mb-4 border border-gray-300">
-          {['All', 'Pending', 'Approved', 'Rejected', 'Canceled', 'Ignored'].map((tab, index) => (
-            <TouchableOpacity
-              key={tab}
-              className={`mr-2 px-4 py-2 rounded-full ${
-                selectedTab === tab ? 'bg-blue-500' : 'bg-gray-200'
-              }`}
-              onPress={() => setSelectedTab(tab)}
-            >
-              <Text className={`text-sm font-medium ${selectedTab === tab ? 'text-white' : 'text-gray-600'}`}>
-                {tab} ({index})
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+  if (loading) {
+    return <Text>Loading departments...</Text>;
+  }
 
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-gray-600">Department</Text>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-            <Text className="text-gray-600">
-              {selectedDate.toLocaleDateString()} - {selectedDate.toLocaleDateString()}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={selectedDate}
-            mode="date"
-            display="default"
-            minimumDate={new Date()} // Chỉ cho phép chọn ngày trong tương lai
-            onChange={handleDateChange}
-          />
-        )}
-
-        <View className="p-4 bg-white shadow-sm rounded-lg mb-4 border border-gray-300">
-          <Text className="text-base font-bold text-textPrimary mb-2">Danh sách Xin phép</Text>
-          <FlatList
-            data={requestData}
-            renderItem={renderItem}
-            keyExtractor={(item, index) => index.toString()}
-          />
-        </View>
-
-        <TouchableOpacity
-          className="mt-4 p-4 bg-blue-500 rounded-md flex-row justify-center items-center"
-          onPress={() => router.push('/request/createRequest')}
-        >
-          <Text className="text-white text-center text-lg">Tạo mới</Text>
-        </TouchableOpacity>
-      </View>
-    </ImageBackground>
+  const filteredLeaveRequests = leaveRequests.filter(req => 
+    selectedStatus === 'All' || req.status.toLowerCase() === selectedStatus.toLowerCase()
   );
-}
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      className="flex-1 bg-white"
+      keyboardVerticalOffset={100} // Adjust as needed
+    >
+      <View className="flex-row items-center mb-8 py-4 bg-blue-500">
+          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+        <Ionicons name="chevron-back" size={24} color="white" />
+        </TouchableOpacity>
+        <Text className="flex-1 text-center text-2xl font-bold mx-4 text-white">Xin phép</Text>
+      </View>
+        <View className="flex-1 bg-gray-100 p-4">
+              
+              
+        {/* Các phần nội dung khác */}
+        
+            <View className="flex-row flex-wrap justify-between mb-4">
+              {['All', 'Pending', 'Approved', 'Rejected', 'Canceled', 'Ignored'].map(status => (
+                <TouchableOpacity
+                  key={status}
+                  onPress={() => setSelectedStatus(status)}
+                  className={`px-4 py-2 rounded-lg border border-gray-300 mr-2 mb-2 ${selectedStatus === status ? 'bg-blue-500' : ''}`}
+                >
+                  <Text className={`${selectedStatus === status ? 'text-white' : 'text-gray-700'}`}>
+                    {status} ({leaveRequests.filter(req => selectedStatus === 'All' || req.status.toLowerCase() === status.toLowerCase()).length})
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View className="flex-row justify-between mb-4">
+              <View className="flex-1 mr-2">
+                <Picker
+                  selectedValue={selectedDepartment}
+                  onValueChange={(itemValue) => setSelectedDepartment(itemValue)}
+                  style={{ backgroundColor: 'white', borderColor: 'gray', borderRadius: 8, paddingHorizontal: 10 }}
+                >
+                  {departments.map(dept => (
+                    <Picker.Item key={dept} label={dept} value={dept} />
+                  ))}
+                </Picker>
+              </View>
+
+              <View className="flex-1 flex-row items-center justify-between">
+                <TouchableOpacity onPress={() => setShowFromPicker(true)} className="bg-white border border-gray-300 rounded-lg px-2 py-1">
+                  <Text>{fromDate.toLocaleDateString()}</Text>
+                </TouchableOpacity>
+                {showFromPicker && (
+                  <DateTimePicker
+                    value={fromDate}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowFromPicker(false);
+                      if (selectedDate) setFromDate(selectedDate);
+                    }}
+                  />
+                )}
+                <Text className="mx-2">-</Text>
+                <TouchableOpacity onPress={() => setShowToPicker(true)} className="bg-white border border-gray-300 rounded-lg px-2 py-1">
+                  <Text>{toDate.toLocaleDateString()}</Text>
+                </TouchableOpacity>
+                {showToPicker && (
+                  <DateTimePicker
+                    value={toDate}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowToPicker(false);
+                      if (selectedDate) setToDate(selectedDate);
+                    }}
+                  />
+                )}
+              </View>
+            </View>
+
+            <Text className="font-bold text-lg mb-2">Danh sách Xin phép</Text>
+            <FlatList
+              data={filteredLeaveRequests}
+              renderItem={renderLeaveRequest}
+              keyExtractor={(item, index) => index.toString()}
+            />
+
+            <TouchableOpacity
+              className="bg-blue-500 rounded-full p-3 absolute bottom-4 right-4 flex-row items-center"
+              onPress={() => {router.push("/request/createRequest")}}
+            >
+                <Ionicons name="add-circle" size={24} color="white" />
+                <Text className="ml-2 text-white">Tạo mới</Text>
+            </TouchableOpacity>
+          </View>
+      </KeyboardAvoidingView>
+  );
+};
+
+export default Request;

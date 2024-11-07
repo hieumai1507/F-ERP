@@ -7,7 +7,7 @@ function TabLayout() {
   return (
     <Tabs>
       <Tabs.Screen 
-        name="HomeScreen" 
+        name="index" 
         options={{
           headerShown: false,
           tabBarLabel: "Trang chủ",

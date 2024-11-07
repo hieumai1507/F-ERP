@@ -20,7 +20,7 @@ const PersonalScreen = () => {
   return (
     <ProtectedRoute>
       <View className="flex-1 p-5 bg-gray-100">
-        <Text className="text-4xl font-bold mb-5 text-center text-gray-800">Settings</Text>
+        <Text className="text-4xl font-bold mb-5 text-center text-gray-800">Cá nhân</Text>
         <View className="my-2">
           <TouchableOpacity className="flex-row items-center py-4 px-2 rounded-lg bg-white mb-2 shadow">
             <Icon name="user" size={24} color="#4caf50" />

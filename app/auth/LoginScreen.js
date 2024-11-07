@@ -7,9 +7,11 @@ import { useRouter } from "expo-router";
 import * as Yup from "yup";
 import { Formik } from "formik";
 import { useMutation } from "@tanstack/react-query";
-import { loginUser } from "../(services)/api/api";
+import { loginUser, getProfile } from "../(services)/api/api";
 import { useDispatch, useSelector } from "react-redux";
 import { loginAction } from "../(redux)/authSlice";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 
 const LoginSchema = Yup.object().shape({
@@ -31,6 +33,7 @@ const LoginScreen = () => {
     mutationFn: loginUser,
     mutationKey: ["LoginScreen"],
   });
+  
   // console.log(mutation);
   const user = useSelector((state) => state.auth.user);
   useEffect(() => {
@@ -49,18 +52,23 @@ const LoginScreen = () => {
       <Formik
         initialValues={{ PhoneNumber: "0123456789", password: "123456" }}
         validationSchema={LoginSchema}
-        onSubmit={(values) => {
-          console.log(values);
-          mutation
-            .mutateAsync(values)
-            .then((data) => {
-              console.log("data", data);
-              dispatch(loginAction(data));
-            })
-            .catch((err) => {
-              console.log(err);
-            });
-          router.push("/(tabs)");
+        onSubmit={async (values) => { // Dùng async function
+          try {
+            const loginData = await mutation.mutateAsync(values); 
+            console.log("data", loginData);
+
+            AsyncStorage.setItem('token', loginData.token); // Lưu token vào AsyncStorage
+
+            dispatch(loginAction(loginData)); // vẫn dispatch loginData
+
+            const profileData = await getProfile(); // Gọi getProfile sau khi lưu token
+            console.log("Profile Data:", profileData);
+
+            router.push("/(tabs)"); // Chuyển hướng sau khi đăng nhập và lấy profile thành công
+          } catch (error) {
+            console.error("Login or profile fetch error:", error);
+            // Hiển thị thông báo lỗi cho người dùng (ví dụ: alert)
+          }
         }}
       >
         {({

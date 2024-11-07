@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import { logoutAction } from "../(redux)/authSlice";
 import ProtectedRoute from "@/components/ProtectedRoute";
-const PersonalScreen = () => {
+const ProfileScreen = () => {
   const router = useRouter(); 
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
@@ -36,4 +36,4 @@ const PersonalScreen = () => {
   )
 }
 
-export default PersonalScreen
+export default ProfileScreen
