@@ -11,7 +11,7 @@ const ProfileScreen = () => {
 
   const handleLogout = () => {
     dispatch(logoutAction());
-    router.push("/auth/LoginScreen");
+    router.push("../Login/LoginScreen");
   };
 
   return (

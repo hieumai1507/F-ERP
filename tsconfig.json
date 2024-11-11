@@ -14,5 +14,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, "app/(redux)/authSlice.js", "app/(redux)/store.js", "app/auth/LoginScreen.js", "components/AppGradient.tsx", "app/_layout.js", "app/(tabs)/_layout.js", "app/(tabs)/CalendarScreen.js", "app/(tabs)/index.js", "app/(tabs)/PersonalScreen.js", "app/(tabs)/ProfileScreen.js", "app/request/createRequest.js", "app/request/request.js"  ]
+, "app/(redux)/authSlice.js", "app/(redux)/store.js", "app/Login/LoginScreen.js", "components/AppGradient.tsx", "app/_layout.js", "app/(tabs)/_layout.js", "app/(tabs)/CalendarScreen.js", "app/(tabs)/HomeScreen.js", "app/(tabs)/PersonalScreen.js", "app/(tabs)/ProfileScreen.js", "app/request/createRequest.js", "app/request/request.js", "app/index.jsx"  ]
 }

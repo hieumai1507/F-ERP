@@ -4,8 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
+import {useNavigation} from '@react-navigation/native';
 
-const Request = ({ navigation }) => {
+const Request = () => {
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [departments, setDepartments] = useState([]);
@@ -14,7 +15,7 @@ const Request = ({ navigation }) => {
   const [toDate, setToDate] = useState(new Date());
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
-
+  const navigation = useNavigation();
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
@@ -77,10 +78,7 @@ const Request = ({ navigation }) => {
         <Text className="flex-1 text-center text-2xl font-bold mx-4 text-white">Xin phép</Text>
       </View>
         <View className="flex-1 bg-gray-100 p-4">
-              
-              
-        {/* Các phần nội dung khác */}
-        
+                        
             <View className="flex-row flex-wrap justify-between mb-4">
               {['All', 'Pending', 'Approved', 'Rejected', 'Canceled', 'Ignored'].map(status => (
                 <TouchableOpacity

@@ -4,6 +4,7 @@ import { Video, ResizeMode } from "expo-av";
 import { useRouter } from "expo-router";
 import AppGradient from "@/components/AppGradient";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 export default function App() {
   const video = React.useRef(null);
   const [status, setStatus] = React.useState({});
@@ -17,9 +18,15 @@ export default function App() {
       <View className="flex-row justify-around items-center absolute bottom-8 left-0 right-0">
         <TouchableOpacity
           className="bg-purple-600 py-3 px-5 rounded-full shadow" // Thay thế cho styles.button
-          onPress={() => router.push("/auth/LoginScreen")}
+          onPress={() => router.push("/Login/LoginScreen")}
         >
-          <Text className="text-white text-3xl font-bold">Đăng nhập</Text>
+          <Text className="text-white text-3xl font-bold text-center">Đăng nhập</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="bg-purple-600 py-3 px-5 rounded-full shadow" // Thay thế cho styles.button
+          onPress={() => router.push("/Login/RegisterScreen")}
+        >
+          <Text className="text-white text-3xl font-bold text-center">Đăng ký</Text>
         </TouchableOpacity>
       </View>
       </SafeAreaView>

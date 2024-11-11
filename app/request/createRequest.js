@@ -49,16 +49,22 @@ export default function CreateRequestScreen() {
       alert("Vui lòng nhập loại!");
       return;
     }
-    if (loai === "Đi muộn" && thoiGian.getHours() >= 12) {
-      alert("Thời gian đi muộn không được quá 12 giờ trưa");
-      return;
+    if (loai === "Đi muộn") {
+      const hours = thoiGian.getHours();
+      const minutes = thoiGian.getMinutes();
+    
+      
+        if (hours >= 8) {
+          if (hours === 8 && minutes < 20) return; // Specifically allows 8:00-8:19
+          
+          alert("Thời gian đi muộn không được quá 8 giờ 20 phút sáng");
+            return;
     }
-
+    }
 
     // Submit data
     console.log('Data submitted:', { loai, thoiGian, ngayXinPhep, lyDo, thoiGianVangMat });
   };
-
 
   return (
     <KeyboardAvoidingView
@@ -106,9 +112,6 @@ export default function CreateRequestScreen() {
             </View>
           )}
 
-
-
-
           <View className="mb-4">
             <Text className="mb-1 font-bold">Thời gian</Text>
             <TouchableOpacity onPress={() => setShowTimePicker(true)} className="border border-gray-300 rounded p-2">
@@ -119,15 +122,12 @@ export default function CreateRequestScreen() {
               <DateTimePicker
                 value={thoiGian}
                 mode="time"
-                is24Hour={false}
+                is24Hour={true}
                 display="default"
                 onChange={onChangeTime}
               />
             )}
-
-
           </View>
-
 
           <View className="mb-4">
             <Text className="mb-1 font-bold">Ngày xin phép</Text>
@@ -143,9 +143,7 @@ export default function CreateRequestScreen() {
                 minimumDate={new Date()} // Set minimum date to today
               />
             )}
-
           </View>
-
 
           <View className="mb-4">
             <Text className="mb-1 font-bold">Lý do</Text>
@@ -163,9 +161,6 @@ export default function CreateRequestScreen() {
             <Text className="mb-1 font-bold">Người duyệt</Text>
             <Text>Lỗ Quang Tính</Text>
           </View>
-
-
-
 
           <TouchableOpacity onPress={handleSubmit} className="bg-blue-500 rounded-lg py-3">
             <Text className="text-white text-center text-lg">Submit</Text>

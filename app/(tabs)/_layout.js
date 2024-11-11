@@ -6,8 +6,9 @@ import { Tabs } from "expo-router";
 function TabLayout() {
   return (
     <Tabs>
+
       <Tabs.Screen 
-        name="index" 
+        name="HomeScreen" 
         options={{
           headerShown: false,
           tabBarLabel: "Trang chủ",
@@ -39,7 +40,7 @@ function TabLayout() {
       <Tabs.Screen 
         name="PersonalScreen" 
         options={{
-          headerShown: false,
+          headerShown: false, 
           tabBarLabel: "Cá nhân",
           tabBarIcon: ({ color }) => (
             <Ionicons name="person-outline" size={24} color={color} /> // Sử dụng màu tab hiện tại
