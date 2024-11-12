@@ -103,7 +103,7 @@ export default function CreateRequestScreen() {
     >
          <View className="flex-row items-center mb-8 py-4 bg-blue-500">
             <TouchableOpacity onPress={() => navigation.goBack()} className="mr-2">
-            <Ionicons name="chevron-back" size={24} color="white" />
+              <Ionicons name="chevron-back" size={24} color="white" />
             </TouchableOpacity>
             <Text className="text-2xl font-bold text-center flex-1 mx-4 text-white">Tạo đơn</Text>
           </View>

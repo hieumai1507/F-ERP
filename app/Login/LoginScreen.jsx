@@ -11,6 +11,15 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const handleLoginError = (error) => {
+    if (error.response && error.response.data) {
+      Alert.alert('Error', error.response.data.data || 'Login failed'); // Use data field for the message.
+    } else {
+      Alert.alert('Error', 'Có lỗi xảy ra, vui lòng thử lại sau!');
+    }
+    console.error(error);
+};
+
   function handleSubmit() {
     console.log(email, password);
     const userData = {
@@ -32,13 +41,10 @@ const LoginScreen = () => {
         }
       }else {
         // wrong user 
-        Alert.alert('Error', "Tài khoản hoặc mật khẩu không chính xác!");
+        handleLoginError({ response: { data: res.data } });
       }
     })
-    .catch(error => {
-      console.error(error);
-      Alert.alert('Error', 'Có lỗi xảy ra, vui lòng thử lại sau!');
-    });
+    .catch(handleLoginError);
   }
 
   async function getData() {

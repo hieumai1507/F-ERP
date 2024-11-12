@@ -1,12 +1,13 @@
 import React from "react";
 import { Text, View, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-
+import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import ProtectedRoute from "../../components/ProtectedRoute";
 
 const PersonalScreen = () => {
   const router = useRouter();
+  const user = useSelector((state) => state.auth.user); //make sure 'user' is available
   const handleLogout = async () => {
     await AsyncStorage.setItem('isLoggedIn', '');
     await AsyncStorage.setItem('token', '');
@@ -19,7 +20,10 @@ const PersonalScreen = () => {
       <View className="flex-1 p-5 bg-gray-100">
         <Text className="text-4xl font-bold mb-5 text-center text-gray-800">Cá nhân</Text>
         <View className="my-2">
-          <TouchableOpacity className="flex-row items-center py-4 px-2 rounded-lg bg-white mb-2 shadow" onPress={() => router.push('../UpdateProfile/UpdateProfile.jsx')}>
+          <TouchableOpacity className="flex-row items-center py-4 px-2 rounded-lg bg-white mb-2 shadow" onPress={() => router.push({
+            pathname: "/UpdateProfile/UpdateProfile",
+            params: { data: user }
+          })}>
             <Icon name="user" size={24} color="#4caf50" />
             <Text className="flex-1 text-lg ml-2 text-gray-800">Account</Text>
             <Icon name="angle-right" size={24} color="#999" className="ml-auto" />

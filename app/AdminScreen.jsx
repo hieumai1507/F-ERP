@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {Text, View, StyleSheet, Image, FlatList,Alert} from 'react-native';
+import {Text, View, StyleSheet, Image, FlatList,Alert, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import {Button} from 'react-native-paper';
@@ -19,10 +19,17 @@ function AdminScreen({navigation}) {
     { key: 'requests', title: 'Leave Requests' }, // New tab for leave requests
   ]);
   const [userInfos, setUserInfos] = useState({}); // Store user info for quick lookup
+  const [initialLayout, setInitialLayout] = useState({
+    width: Dimensions.get('window').width,
+  });
   async function getAllData() {
     axios.get('http://192.168.50.52:5001/get-all-user').then(res => {
       console.log(res.data);
       setAllUserData(res.data.data);
+    })
+    .catch(error => {
+      console.error("Error fetching users", error);
+      Alert.alert("Error", "Could not fetch users");
     });
   }
 
@@ -167,11 +174,13 @@ const renderLeaveRequest = ({ item }) => {
   <View style={styles.card}>
   <View style={styles.cardDetails}>
     <Text style={styles.requestInfo}>Request ID: {item._id}</Text>
-    {creatorInfo && ( // Check if creatorInfo is available
+    {creatorInfo ? ( // Check if creatorInfo is available
       <>
         <Text style={styles.requestInfo}>Creator Name: {creatorInfo.name}</Text>
         <Text style={styles.requestInfo}>Creator Email: {creatorInfo.email}</Text>
       </>
+    ): (
+      <Text style={styles.requestInfo}>Creator information not found</Text>
     )}
     <Text style={styles.requestInfo}>Type: {item.type}</Text>
     <Text style={styles.requestInfo}>Time: {item.time ? new Date(item.time).toLocaleTimeString() : ''}</Text> {/* Format time */}
@@ -243,12 +252,15 @@ const renderLeaveRequest = ({ item }) => {
           navigationState={{ index, routes }}
           renderScene={renderScene}
           onIndexChange={setIndex}
-          initialLayout={{ width: '100%' }} // or Dimensions.get('window').width
+          initialLayout={initialLayout}
+          onLayout={event => setInitialLayout(event.nativeEvent.layout)} // Update layout on mount and resize
           renderTabBar={props => (
             <TabBar
               {...props}
               indicatorStyle={{ backgroundColor: 'blue' }} // Customize indicator
-              style={{ backgroundColor: 'white' }} // Customize tab bar background
+              style={{ backgroundColor: '#40e0d0' }} // Customize tab bar background
+              labelStyle= {{ color: "#FFFFFF", fontWeight: 'bold' }} // Customize
+              activeLabelStyle={{ color:'FF6347'}}
             />
           )}
         />

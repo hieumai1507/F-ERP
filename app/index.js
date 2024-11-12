@@ -17,13 +17,13 @@ export default function App() {
       <Text className="text-center text-white font-bold text-5xl pt-20">Chào mừng bạn đến mới F-ERP</Text>
       <View className="flex-row justify-around items-center absolute bottom-8 left-0 right-0">
         <TouchableOpacity
-          className="bg-purple-600 py-3 px-5 rounded-full shadow" // Thay thế cho styles.button
+          className="bg-blue-600 py-3 px-5 rounded-full shadow" // Thay thế cho styles.button
           onPress={() => router.push("/Login/LoginScreen")}
         >
           <Text className="text-white text-3xl font-bold text-center">Đăng nhập</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-purple-600 py-3 px-5 rounded-full shadow" // Thay thế cho styles.button
+          className="bg-blue-600 py-3 px-5 rounded-full shadow" // Thay thế cho styles.button
           onPress={() => router.push("/Login/RegisterScreen")}
         >
           <Text className="text-white text-3xl font-bold text-center">Đăng ký</Text>

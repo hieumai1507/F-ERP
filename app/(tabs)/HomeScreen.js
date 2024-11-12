@@ -89,11 +89,11 @@ const HomeScreen = (props) => {
             }} className="w-12 h-12 rounded-full" />
           <StyledView className="ml-3">
             <StyledText className="text-white text-lg font-bold">{userData.name}</StyledText>
-            <StyledText className="text-white text-base "> {userData.profession == '' ||
-                  userData.profession == undefined ||
-                  userData.profession == null
+            <StyledText className="text-white text-base "> {userData.department == '' ||
+                  userData.department == undefined ||
+                  userData.department == null
                     ? ''
-                    : userData.profession}</StyledText>
+                    : userData.department}</StyledText>
           </StyledView>
           <FontAwesome5 name="bell" size={24} color="white" style={{ marginLeft: 'auto' }} />
       </StyledView>
@@ -108,11 +108,11 @@ const HomeScreen = (props) => {
           <StyledText>Check in: 07:24</StyledText>
           <StyledText>Check out: --:--</StyledText>
         </StyledView>
-        <StyledText className="text-lg font-bold mt-3 text-gray-800"> {userData.profession == '' ||
-                  userData.profession == undefined ||
-                  userData.profession == null
+        <StyledText className="text-lg font-bold mt-3 text-gray-800"> {userData.department == '' ||
+                  userData.department == undefined ||
+                  userData.department == null
                     ? ''
-                    : userData.profession}</StyledText>
+                    : userData.department}</StyledText>
         <StyledView className="flex-row flex-wrap mt-5">
 
         <StyledPressable 
