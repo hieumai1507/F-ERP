@@ -7,10 +7,10 @@ import ProtectedRoute from "../../components/ProtectedRoute";
 
 const PersonalScreen = () => {
   const router = useRouter();
-  const handleLogout = () => {
-    AsyncStorage.setItem('isLoggedIn', '');
-    AsyncStorage.setItem('token', '');
-    AsyncStorage.setItem('userType', '');
+  const handleLogout = async () => {
+    await AsyncStorage.setItem('isLoggedIn', '');
+    await AsyncStorage.setItem('token', '');
+    await AsyncStorage.setItem('userType', '');
     router.push("/Login/LoginScreen")
   };
 

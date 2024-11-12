@@ -30,7 +30,14 @@ const LoginScreen = () => {
         } else {
           router.push('../(tabs)/HomeScreen');
         }
+      }else {
+        // wrong user 
+        Alert.alert('Error', "Tài khoản hoặc mật khẩu không chính xác!");
       }
+    })
+    .catch(error => {
+      console.error(error);
+      Alert.alert('Error', 'Có lỗi xảy ra, vui lòng thử lại sau!');
     });
   }
 
@@ -51,7 +58,7 @@ const LoginScreen = () => {
           <Image className="h-65 w-65 mt-8" source={require('../../assets/images/F-ERP_Logo.png')} />
         </View>
         <View className="bg-white rounded-tl-30 rounded-tr-30 px-5 py-7">
-          <Text className="text-[#420475] font-bold text-3xl">Login !!!</Text>
+          <Text className="text-[#418dea] font-bold text-3xl text-center">Login !!!</Text>
           <View className="flex flex-row pt-3 pb-1 mt-4 px-3 border border-[#420475] rounded-full">
             <FontAwesome name="user-o" color="#420475" className="mr-2 text-lg" />
             <TextInput

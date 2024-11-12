@@ -25,8 +25,11 @@ const HomeScreen = (props) => {
     axios
       .post('http://192.168.1.30:5001/userdata', {token: token})
       .then(res => {
-        console.log(res.data);
+        console.log('Response data',res.data);
         setUserData(res.data.data);
+      })
+      .catch(error => {
+        console.log('Error:', error);
       });
   }
 
@@ -57,8 +60,9 @@ const HomeScreen = (props) => {
   );
 
   useEffect(() => {
+   console.log('Updated user data:', userData);
    
-  }, []);
+  }, [userData]);
   
     // Lấy ngày và giờ hiện tại
     const currentDate = new Date();

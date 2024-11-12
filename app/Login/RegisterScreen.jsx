@@ -81,10 +81,10 @@ function RegisterPage({ props }) {
           <Image className="h-64 w-64" source={require('../../assets/images/F-ERP_Logo.png')} />
         </View>
         <View className="bg-white pt-8 pb-4 px-5 rounded-tl-3xl rounded-tr-3xl">
-          <Text className="text-3xl font-bold text-[#420475]">Register!!!</Text>
+          <Text className="text-3xl font-bold text-[#418dea] text-center">Register!!!</Text>
 
           <View className="flex flex-row justify-between items-center my-5">
-            <Text className="text-xl text-[#420475]">Login as</Text>
+            <Text className="text-xl text-[#418dea]">Login as</Text>
             <View className="flex flex-row justify-center items-center">
               <Text className="text-lg text-black">User</Text>
               <RadioButton value="User" status={userType === 'User' ? 'checked' : 'unchecked'} onPress={() => setUserType('User')} />

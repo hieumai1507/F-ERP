@@ -18,6 +18,11 @@ const Request = () => {
   const [showToPicker, setShowToPicker] = useState(false);
   const [leaveRequests, setLeaveRequests] = useState([]);
   useEffect(() => {
+    // Set your department list here
+    setDepartments([
+      'DEV', 'Marketing', 'Data', 'PKD', 'Media', 'Vardlens', 'Kế Toán', 'HR', 'BM', 'Manager'
+    ]);
+
     const fetchLeaveRequests = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
@@ -117,10 +122,11 @@ const Request = () => {
                   onValueChange={(itemValue) => setSelectedDepartment(itemValue)}
                   style={{ backgroundColor: 'white', borderColor: 'gray', borderRadius: 8, paddingHorizontal: 10 }}
                 >
+                  <Picker.Item label="Select Department" value={null} />
                   {departments.map(dept => (
                     <Picker.Item key={dept} label={dept} value={dept} />
                   ))}
-                </Picker>
+            </Picker>
               </View>
 
               <View className="flex-1 flex-row items-center justify-between">
