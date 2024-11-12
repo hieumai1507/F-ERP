@@ -1,17 +1,17 @@
 import React from "react";
 import { Text, View, TouchableOpacity } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
-import { logoutAction } from "../(redux)/authSlice";
 import ProtectedRoute from "@/components/ProtectedRoute";
 const ProfileScreen = () => {
   const router = useRouter(); 
-  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
 
   const handleLogout = () => {
-    dispatch(logoutAction());
-    router.push("../Login/LoginScreen");
+    AsyncStorage.setItem('isLoggedIn', '');
+    AsyncStorage.setItem('token', '');
+    AsyncStorage.setItem('userType', '');
+    router.push("/Login/LoginScreen")
   };
 
   return (

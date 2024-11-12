@@ -26,7 +26,7 @@ const LoginScreen = () => {
         AsyncStorage.setItem('isLoggedIn', JSON.stringify(true));
         AsyncStorage.setItem('userType', res.data.userType);
         if (res.data.userType === "Admin") {
-          router.push('../AdminScrren');
+          router.push('../AdminScreen');
         } else {
           router.push('../(tabs)/HomeScreen');
         }

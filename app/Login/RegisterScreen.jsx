@@ -41,7 +41,7 @@ function RegisterPage({ props }) {
       .then(res => {
         if (res.data.status == 'ok') {
           Alert.alert('Registered Successfully!!');
-          router.push("/LoginScreen")
+          router.push("./LoginScreen")
         } else {
           Alert.alert(JSON.stringify(res.data));
         }

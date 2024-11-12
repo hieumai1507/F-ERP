@@ -5,7 +5,8 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import {useNavigation} from '@react-navigation/native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 const Request = () => {
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedDepartment, setSelectedDepartment] = useState(null);
@@ -15,30 +16,44 @@ const Request = () => {
   const [toDate, setToDate] = useState(new Date());
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
-  const navigation = useNavigation();
+  const [leaveRequests, setLeaveRequests] = useState([]);
   useEffect(() => {
-    const fetchDepartments = async () => {
+    const fetchLeaveRequests = async () => {
       try {
-        const data = ['DEV', 'HR', 'HCNS', 'BM', 'Media', 'Marketing', 'Varldens'];
-        setDepartments(data);
-        setSelectedDepartment(data[0]);
+        const token = await AsyncStorage.getItem('token');
+        const response = await axios.get('http://192.168.50.52:5001/get-leave-requests', {
+          params: { token } 
+        });
+        if (response.data.status === 'ok') {
+          setLeaveRequests(response.data.data);
+        } else {
+          console.error('Error fetching leave requests:', response.data.data);
+        }
       } catch (error) {
-        console.error("Error fetching departments:", error);
+        console.error("Error fetching leave requests:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchDepartments();
+
+    fetchLeaveRequests();
   }, []);
 
-  const leaveRequests = [
-    { type: 'Về sớm', createdAt: '23/10/24 16:47', date: '23/10/2024', time: '08:00', reason: 'Em xin phép về sớm do có việc cá nhân', status: 'Completed' },
-    { type: 'Đi muộn', createdAt: '23/10/24 16:47', date: '23/10/2024', time: '08:00', reason: 'Em xin phép về sớm do có việc cá nhân', status: 'Ignored' },
-    { type: 'Nghỉ phép', createdAt: '24/10/24 09:12', date: '25/10/2024', time: 'Cả ngày', reason: 'Nghỉ phép', status: 'Pending' },
-    { type: 'Về sớm', createdAt: '24/10/24 14:35', date: '24/10/2024', time: '17:00', reason: 'Có việc gia đình', status: 'Approved' },
-    { type: 'Đi muộn', createdAt: '25/10/24 11:00', date: '26/10/2024', time: '10:00', reason: 'Khám bệnh', status: 'Rejected' },
-    { type: 'Nghỉ phép', createdAt: '26/10/24 15:20', date: '27/10/2024', time: 'Cả ngày', reason: 'Du lịch', status: 'Canceled' },
-  ];
+  
+
+  const getStatusCount = (status) => {
+    if (status === 'All') {
+        return leaveRequests.filter(req => {  // Count ALL within date range
+            const requestDate = new Date(req.date.split('/').reverse().join('-'));
+            return requestDate >= fromDate && requestDate <= toDate;
+        }).length;
+    } else {
+        return leaveRequests.filter(req => { // Count specific status within date range
+            const requestDate = new Date(req.date.split('/').reverse().join('-'));
+            return req.status === status && requestDate >= fromDate && requestDate <= toDate;
+        }).length;
+    }
+  };
 
   const renderLeaveRequest = ({ item }) => (
     <View className="bg-white rounded-lg p-4 mb-4 shadow-md">
@@ -61,9 +76,11 @@ const Request = () => {
     return <Text>Loading departments...</Text>;
   }
 
-  const filteredLeaveRequests = leaveRequests.filter(req => 
-    selectedStatus === 'All' || req.status.toLowerCase() === selectedStatus.toLowerCase()
-  );
+  const filteredLeaveRequests = leaveRequests.filter(req => {
+    const requestDate = new Date(req.date.split('/').reverse().join('-'));
+    return requestDate >= fromDate && requestDate <= toDate &&
+           (selectedStatus === 'All' || req.status === selectedStatus);
+  });
 
   return (
     <KeyboardAvoidingView
@@ -87,7 +104,7 @@ const Request = () => {
                   className={`px-4 py-2 rounded-lg border border-gray-300 mr-2 mb-2 ${selectedStatus === status ? 'bg-blue-500' : ''}`}
                 >
                   <Text className={`${selectedStatus === status ? 'text-white' : 'text-gray-700'}`}>
-                    {status} ({leaveRequests.filter(req => selectedStatus === 'All' || req.status.toLowerCase() === status.toLowerCase()).length})
+                    {status} ({getStatusCount(status)})
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -141,10 +158,10 @@ const Request = () => {
 
             <Text className="font-bold text-lg mb-2">Danh sách Xin phép</Text>
             <FlatList
-              data={filteredLeaveRequests}
-              renderItem={renderLeaveRequest}
-              keyExtractor={(item, index) => index.toString()}
-            />
+                data={filteredLeaveRequests}
+                renderItem={renderLeaveRequest}
+                keyExtractor={(item) => item._id} // Use _id from database as key
+              />
 
             <TouchableOpacity
               className="bg-blue-500 rounded-full p-3 absolute bottom-4 right-4 flex-row items-center"

@@ -4,6 +4,8 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 export default function CreateRequestScreen() {
   const navigation = useNavigation();
@@ -31,7 +33,7 @@ export default function CreateRequestScreen() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validation logic here (similar to previous responses)
     if (!lyDo) {
       alert("Vui lòng nhập lý do!");
@@ -62,8 +64,35 @@ export default function CreateRequestScreen() {
     }
     }
 
-    // Submit data
-    console.log('Data submitted:', { loai, thoiGian, ngayXinPhep, lyDo, thoiGianVangMat });
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.post('http://192.168.50.52:5001/create-leave-request', {
+        token,
+        type: loai,
+        time: thoiGian,
+        date: ngayXinPhep,
+        reason: lyDo,
+        thoiGianVangMat: thoiGianVangMat, // include thoiGianVangMat
+    
+      });
+    
+    
+      if (response.data.status === 'ok') {
+        console.log('Leave request created successfully:', response.data.data);
+        navigation.goBack(); // Navigate back to the request screen after successful submission.
+      } else {
+        console.error('Error creating leave request:', response.data.data);
+        // handle error, maybe show alert to user.
+    
+      }
+    
+    
+    } catch (error) {
+      console.error("Error creating request:", error);
+    
+      // handle error, maybe show alert to user
+    }
+    
   };
 
   return (

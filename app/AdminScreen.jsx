@@ -5,10 +5,20 @@ import axios from 'axios';
 import {Button} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
+import { TouchableOpacity } from 'react-native'; // Import TouchableOpacity
+import { TabView, SceneMap, TabBar } from 'react-native-tab-view'; // Import TabView 
+
+
 function AdminScreen({navigation}) {
   const [userData, setUserData] = useState('');
   const [allUserData, setAllUserData] = useState('');
-
+  const [leaveRequests, setLeaveRequests] = useState([]);
+  const [index, setIndex] = useState(0); // State for the active tab
+  const [routes] = useState([
+    { key: 'users', title: 'Users' },
+    { key: 'requests', title: 'Leave Requests' }, // New tab for leave requests
+  ]);
+  const [userInfos, setUserInfos] = useState({}); // Store user info for quick lookup
   async function getAllData() {
     axios.get('http://192.168.50.52:5001/get-all-user').then(res => {
       console.log(res.data);
@@ -75,19 +85,172 @@ function AdminScreen({navigation}) {
       </View>
     </View>
   );
+
+  useEffect(() => {
+    const fetchLeaveRequests = async () => {
+      try {
+        const response = await axios.get('http://192.168.50.52:5001/get-all-leave-requests'); // Get all leave requests
+
+        if (response.data.status === 'ok') {
+          setLeaveRequests(response.data.data);
+        } else {
+          console.error('Error fetching leave requests:', response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching leave requests:", error);
+      }
+    };
+
+    fetchLeaveRequests();
+
+    const fetchUserInfos = async () => { // Fetch all user info
+      try {
+        const response = await axios.get('http://192.168.50.52:5001/get-all-user');
+        if (response.data.status === 'ok') {
+
+          const userInfosMap = {};
+          response.data.data.forEach(userInfo => {
+            userInfosMap[userInfo.email] = userInfo;
+          });
+          setUserInfos(userInfosMap);
+
+
+        } else {
+          console.error('Error fetching user infos:', response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching user infos:", error);
+      }
+
+    }
+    fetchUserInfos();
+  }, []);
+
+
+
+  const handleStatusUpdate = async (requestId, newStatus) => {
+    try {
+      const response = await axios.post('http://192.168.50.52:5001/update-leave-request-status', {
+        requestId,
+        status: newStatus
+      });
+
+      if (response.data.status === 'ok') {
+        // Update the leave request in the state
+        setLeaveRequests(prevRequests =>
+          prevRequests.map(request =>
+            request._id === requestId ? response.data.data : request
+          )
+        );
+
+        Alert.alert('Status updated successfully'); // Show success message
+
+      } else {
+        console.error("Error updating status:", response.data.data);
+        Alert.alert('Error updating status', 'Please try again'); // Show error message
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      Alert.alert('Error updating status', 'Please try again'); // Show error message
+
+    }
+
+  }
+  
+
+
+const renderLeaveRequest = ({ item }) => {
+  
+  const creatorInfo = userInfos[item.userEmail]; // Get creator info
+
   return (
-    <>
-      <View style={styles.container}>
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>{userData.name}</Text>
-          <Text style={styles.userType}>{userData.userType}</Text>
-          <Text style={styles.userType}>Total User: {allUserData.length}</Text>
-        </View>
-        <FlatList
+  <View style={styles.card}>
+  <View style={styles.cardDetails}>
+    <Text style={styles.requestInfo}>Request ID: {item._id}</Text>
+    {creatorInfo && ( // Check if creatorInfo is available
+      <>
+        <Text style={styles.requestInfo}>Creator Name: {creatorInfo.name}</Text>
+        <Text style={styles.requestInfo}>Creator Email: {creatorInfo.email}</Text>
+      </>
+    )}
+    <Text style={styles.requestInfo}>Type: {item.type}</Text>
+    <Text style={styles.requestInfo}>Time: {item.time ? new Date(item.time).toLocaleTimeString() : ''}</Text> {/* Format time */}
+    <Text style={styles.requestInfo}>Date: {item.date ? new Date(item.date).toLocaleDateString() : ''}</Text> {/* Format date */}
+
+
+    <Text style={styles.requestInfo}>Reason: {item.reason}</Text>
+    {/* ... other details (thoiGianVangMat if needed) */}
+    <Text style={styles.status}>Status: {item.status}</Text>
+
+    {/* status update buttons */}
+    <View style={styles.statusButtons}>
+      {['Pending', 'Approved', 'Rejected', 'Canceled', 'Ignored'].map((status) => (
+        <TouchableOpacity
+        key={status}
+        onPress={() => handleStatusUpdate(item._id, status)}
+        style={[styles.statusButton, item.status === status && styles.activeStatusButton]}
+        >
+       <Text style={item.status === status ? styles.activeStatusText : styles.statusButtonText}>{status}</Text>
+     </TouchableOpacity>
+      ))}
+    </View>
+
+  </View>
+</View>
+  );
+};
+  const renderScene = SceneMap({
+    users: () => (
+      <View style={styles.scene}>
+          {/* Existing user management interface */}
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>{userData.name}</Text>
+            <Text style={styles.userType}>{userData.userType}</Text>
+            <Text style={styles.userType}>Total User: {allUserData.length}</Text>
+          </View>
+          <FlatList
           data={allUserData}
           showsVerticalScrollIndicator={false}
           keyExtractor={item => item._id}
           renderItem={({item}) => <UserCard data={item} />}
+        />
+
+      </View>
+
+    ),
+    requests: () => (
+      <View style={styles.scene}>
+
+        {/* Leave request management interface */}
+        <FlatList
+          data={leaveRequests}
+          showsVerticalScrollIndicator={false}
+          keyExtractor={item => item._id}
+          renderItem={renderLeaveRequest} 
+        />
+
+
+      </View>
+    ),
+  });
+
+
+  return (
+    <>
+      <View style={styles.container}>
+         {/* Tab View */}
+        <TabView
+          navigationState={{ index, routes }}
+          renderScene={renderScene}
+          onIndexChange={setIndex}
+          initialLayout={{ width: '100%' }} // or Dimensions.get('window').width
+          renderTabBar={props => (
+            <TabBar
+              {...props}
+              indicatorStyle={{ backgroundColor: 'blue' }} // Customize indicator
+              style={{ backgroundColor: 'white' }} // Customize tab bar background
+            />
+          )}
         />
       </View>
       <Button
@@ -159,5 +322,42 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#777777',
   },
+  status: {
+    fontSize: 14,
+    color: '#777777',
+    marginBottom: 5,
+  },  
+  statusButtons: {
+      flexDirection: 'row',
+      flexWrap: 'wrap', // Allow buttons to wrap to the next line
+      marginTop: 10,
+    },
+    statusButton: {
+      backgroundColor: '#f0f0f0', // Default background color
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 5,
+      marginRight: 5, // Space between buttons
+      marginBottom: 5, // Space between rows of buttons
+    },
+    statusButtonText: {
+      color: '#333', // Default text color
+    },
+    activeStatusButton: {
+      backgroundColor: 'blue', // Background color for active status
+    },
+    activeStatusText: {
+      color: 'white', // Text color for active status
+    },
+    scene: {
+      flex: 1,
+      padding: 20,
+    },
+    requestInfo: {
+      fontSize: 16,
+      color: '#333',
+      marginBottom: 3,
+
+    },
 });
 export default AdminScreen;

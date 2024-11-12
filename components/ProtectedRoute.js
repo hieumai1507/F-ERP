@@ -9,7 +9,7 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("../app/Login/LoginScreen");
+      router.push("/Login/LoginScreen");
     }
   }, [loading, user, router]);
 
