@@ -1,19 +1,22 @@
 import React from "react";
 import { Text, View, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import ProtectedRoute from "../../components/ProtectedRoute";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const PersonalScreen = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user); //make sure 'user' is available
-  const handleLogout = async () => {
-    await AsyncStorage.setItem('isLoggedIn', '');
-    await AsyncStorage.setItem('token', '');
-    await AsyncStorage.setItem('userType', '');
-    router.push("/Login/LoginScreen")
-  };
+  function signOut() {
+    AsyncStorage.setItem('isLoggedIn', '');
+    AsyncStorage.setItem('token', '');
+    AsyncStorage.setItem('userType', '');
+    router.push("/Login/LoginScreen");
+  }
 
   return (
     <ProtectedRoute>
@@ -43,7 +46,7 @@ const PersonalScreen = () => {
             <Text className="flex-1 text-lg ml-2 text-gray-800">About</Text>
             <Icon name="angle-right" size={24} color="#999" className="ml-auto" />
           </TouchableOpacity>
-          <TouchableOpacity className="flex-row items-center py-4 px-2 rounded-lg bg-white mb-2 shadow" onPress={handleLogout}>
+          <TouchableOpacity className="flex-row items-center py-4 px-2 rounded-lg bg-white mb-2 shadow" onPress={() => signOut()}>
             <Icon name="sign-out" size={24} color="#e91e63" />
             <Text className="flex-1 text-lg ml-2 text-gray-800">Logout</Text>
             <Icon name="angle-right" size={24} color="#999" className="ml-auto" />
@@ -54,4 +57,4 @@ const PersonalScreen = () => {
   )
 }
 
-export default PersonalScreen
+export default PersonalScreen;

@@ -183,11 +183,19 @@ const renderLeaveRequest = ({ item }) => {
       <Text style={styles.requestInfo}>Creator information not found</Text>
     )}
     <Text style={styles.requestInfo}>Type: {item.type}</Text>
-    <Text style={styles.requestInfo}>Time: {item.time ? new Date(item.time).toLocaleTimeString() : ''}</Text> {/* Format time */}
-    <Text style={styles.requestInfo}>Date: {item.date ? new Date(item.date).toLocaleDateString() : ''}</Text> {/* Format date */}
+    {item.time && (
+           <Text style={styles.requestInfo}>Time: {new Date(item.time).toLocaleTimeString()}</Text>
+        )}
+    {item.date && (
+           <Text style={styles.requestInfo}>Date: {new Date(item.date).toLocaleDateString()}</Text>
+        )}
 
 
     <Text style={styles.requestInfo}>Reason: {item.reason}</Text>
+    {item.thoiGianVangMat && item.type == "Ra ngoài" && (
+          <Text style={styles.requestInfo}>Time Off: {item.thoiGianVangMat}</Text>
+        )}
+
     {/* ... other details (thoiGianVangMat if needed) */}
     <Text style={styles.status}>Status: {item.status}</Text>
 

@@ -34,6 +34,8 @@ export default function CreateRequestScreen() {
   };
 
   const handleSubmit = async () => {
+
+    let thoiGianVangMatToSend = thoiGianVangMat; // giữ nguyên giá trị nếu type là "Ra Ngoài"
     // Validation logic here (similar to previous responses)
     if (!lyDo) {
       alert("Vui lòng nhập lý do!");
@@ -61,7 +63,10 @@ export default function CreateRequestScreen() {
           
           alert("Thời gian đi muộn không được quá 8 giờ 20 phút sáng");
             return;
+      }
     }
+    if(loai != "Ra Ngoài") {
+      thoiGianVangMatToSend = '0';
     }
 
     try {
@@ -72,12 +77,13 @@ export default function CreateRequestScreen() {
         time: thoiGian,
         date: ngayXinPhep,
         reason: lyDo,
-        thoiGianVangMat: thoiGianVangMat, // include thoiGianVangMat
+        thoiGianVangMat: thoiGianVangMatToSend, // include thoiGianVangMat
     
       });
     
     
       if (response.data.status === 'ok') {
+        alert('Đã tạo đơn thành công!');
         console.log('Leave request created successfully:', response.data.data);
         navigation.goBack(); // Navigate back to the request screen after successful submission.
       } else {

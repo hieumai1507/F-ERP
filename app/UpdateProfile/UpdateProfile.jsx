@@ -61,9 +61,9 @@ function UpdateProfile() {
     setMobile(userData.mobile);
   }
   },[route.params?.data]);
-  const updateProfile = () => { 
+  const updateProfile = async () => { 
     const formdata = {
-      name: name,
+      name,
       image,
       email,
       department,
@@ -71,17 +71,34 @@ function UpdateProfile() {
       gender
     };
     console.log(formdata);
-    axios
-      .post('http://192.168.1.30:5001/update-user', formdata)
+    try{
+    const res = await axios
+      .post('http://192.168.1.30:5001/update-user', formdata)//await the response
       .then(res => {console.log(res.data)
         if(res.data.status=="Ok"){
           Toast.show({
         type:'success',
         text1:'Updated',
         
-      })
+      });
+      navigation.goBack();
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: 'Update Failed',
+            text2: res.data.data || 'Something went wrong'  //show the error from the server
+
+          })
         }
       });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      Toast.show({
+        type: 'error',
+        text: 'Update Failed',
+        text2: 'Network error or server issue'
+      });
+    }
   };
 
   return (
@@ -131,8 +148,8 @@ function UpdateProfile() {
               placeholder="Your Name"
               placeholderTextColor={'#999797'}
               style={styles.infoEditSecond_text}
-              onChange={e => setName(e.nativeEvent.text)}
-              defaultValue={name}
+              onChange={setName}
+              value={name}
             />
           </View>
 

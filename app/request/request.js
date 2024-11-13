@@ -7,6 +7,9 @@ import { router } from 'expo-router';
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import moment from 'moment'; // Import moment.js for date/time formatting
+
+
 const Request = () => {
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedDepartment, setSelectedDepartment] = useState(null);
@@ -60,22 +63,36 @@ const Request = () => {
     }
   };
 
-  const renderLeaveRequest = ({ item }) => (
+  const renderLeaveRequest = ({ item }) => {
+    const formattedDate = moment(item.date).format('DD/MM/YYYY'); // Format date
+    const formattedTime = moment(item.time).format('HH:mm'); // Format time
+    return (
     <View className="bg-white rounded-lg p-4 mb-4 shadow-md">
       <View className="flex-row justify-between items-center mb-2">
         <Text className="font-bold text-lg text-gray-800">Loại: {item.type}</Text>
-        <Text className={`px-2 py-1 rounded-full text-white ${item.status === 'Completed' ? 'bg-green-500' : item.status === 'Ignored' ? 'bg-red-500' : item.status === 'Pending' ? 'bg-yellow-500' : item.status === 'Approved' ? 'bg-blue-500' : item.status === 'Rejected' ? 'bg-gray-500' : item.status === 'Canceled' ? 'bg-orange-500' : ''}`}>
-          {item.status}
-        </Text>
+        <Text className={`px-2 py-1 rounded-full text-white ${
+            item.status === 'Completed' ? 'bg-green-500' :
+            item.status === 'Ignored' ? 'bg-red-500' :
+            item.status === 'Pending' ? 'bg-yellow-500' :
+            item.status === 'Approved' ? 'bg-blue-500' :
+            item.status === 'Rejected' ? 'bg-gray-500' :
+            item.status === 'Canceled' ? 'bg-orange-500' : ''
+          }`}>
+            {item.status}
+          </Text>
       </View>
       <View className="space-y-1">
-        <Text className="text-gray-600">TG tạo: {item.createdAt}</Text>
-        <Text className="text-gray-600">Ngày: {item.date}</Text>
-        <Text className="text-gray-600">Thời gian: {item.time}</Text>
-        <Text className="text-gray-600">Lý do: {item.reason}</Text>
+      <Text className="text-gray-600">Thời gian tạo: {moment(item.createdAt).fromNow()}</Text> {/* Use moment.js */}
+          <Text className="text-gray-600">Ngày: {formattedDate}</Text> {/* Display formatted date */}
+          <Text className="text-gray-600">Thời gian: {formattedTime}</Text> {/* Display formatted time */}
+          <Text className="text-gray-600">Lý do: {item.reason}</Text>
+          {item.thoiGianVangMat && item.type == "Ra Ngoài" && ( // Only display if thoiGianVangMat exists
+            <Text className="text-gray-600">Thời gian vắng mặt: {item.thoiGianVangMat} phút</Text>
+          )}
       </View>
     </View>
   );
+}
 
   if (loading) {
     return <Text>Loading departments...</Text>;
