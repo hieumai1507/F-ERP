@@ -36,39 +36,45 @@ export default function CreateRequestScreen() {
 
   const handleSubmit = async () => {
 
-    let thoiGianVangMatToSend = 0; // giữ nguyên giá trị nếu type là "Ra Ngoài"
     // Validation logic here (similar to previous responses)
+    //validate lý do
     if (!lyDo) {
       alert("Vui lòng nhập lý do!");
       return;
     }
+    //validate thời gian
     if (!thoiGian) {
       alert("Vui lòng nhập thời gian!");
       return;
     }
+    //validate ngày xin phép
     if (!ngayXinPhep) {
       alert("Vui lòng nhập ngày xin phép!");
       return;
     }
+    //validate loại
     if (!loai) {
       alert("Vui lòng nhập loại!");
       return;
     }
+    //condition loại = Đi muộn
     if (loai === "Đi muộn") {
       const hours = thoiGian.getHours();
       const minutes = thoiGian.getMinutes();
     
-      
         if (hours >= 8) {
+
           if (hours === 8 && minutes < 20) return; // Specifically allows 8:00-8:19
-          
           alert("Thời gian đi muộn không được quá 8 giờ 20 phút sáng");
             return;
       }
     }
+    //condition loại = Ra Ngoài
+    let thoiGianVangMatToSend = 0; // giữ nguyên giá trị nếu type là "Ra Ngoài"
     if(loai === "Ra Ngoài") {
-      thoiGianVangMatToSend = thoiGianVangMat;
+        thoiGianVangMat = thoiGianVangMatToSend;
     }
+    //condition loại = Xin nghỉ
     let timeToSend = thoiGian;
     let timeOfDayToSend = null;
     if (loai === 'Xin nghỉ') {
@@ -88,7 +94,6 @@ export default function CreateRequestScreen() {
         timeOfDay: timeOfDayToSend, // Send the time of day
       });
     
-    
       if (response.data.status === 'ok') {
         alert('Đã tạo đơn thành công!');
         console.log('Leave request created successfully:', response.data.data);
@@ -96,16 +101,12 @@ export default function CreateRequestScreen() {
       } else {
         console.error('Error creating leave request:', response.data.data);
         // handle error, maybe show alert to user.
-    
       }
-    
     
     } catch (error) {
       console.error("Error creating request:", error);
-    
       // handle error, maybe show alert to user
     }
-    
   };
 
   return (
@@ -124,7 +125,7 @@ export default function CreateRequestScreen() {
           
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between' }}>
           <Text className="text-gray-500 mb-2">Vui lòng điền đầy đủ và cẩn thận</Text>
-
+          {/* //UI display input loại */}
           <View className="mb-4">
             <Text className="mb-1 font-bold">Loại</Text>
             <Picker
@@ -138,7 +139,7 @@ export default function CreateRequestScreen() {
               <Picker.Item label="Ra Ngoài" value="Ra ngoài" />
             </Picker>
           </View>
-
+          {/* //UI loại = Ra ngoài */}
           {loai === 'Ra ngoài' && (
             <View className="mb-4 ">
               <Text className="mb-1 font-bold">Thời gian vắng mặt</Text>
@@ -152,6 +153,7 @@ export default function CreateRequestScreen() {
               </Picker>
             </View>
           )}
+          {/* //UI loại = Xin Nghỉ: Thời gian xin nghỉ */}
           {loai === 'Xin nghỉ' && (
           <View className="mb-4">
             <Text className="mb-1 font-bold">Thời gian xin nghỉ</Text>
@@ -166,7 +168,7 @@ export default function CreateRequestScreen() {
             </Picker>
           </View>
         )}
-
+        {/* //UI loại khác xin nghỉ : Thời gian */}
         {loai !== 'Xin nghỉ' && (
           <View className="mb-4">
             <Text className="mb-1 font-bold">Thời gian</Text>
@@ -185,7 +187,7 @@ export default function CreateRequestScreen() {
             )}
           </View>
         )}
-
+          {/* UI ngày xin phép */}
           <View className="mb-4">
             <Text className="mb-1 font-bold">Ngày xin phép</Text>
             <TouchableOpacity onPress={() => setShowDatePicker(true)} className="border border-gray-300 rounded p-2">
@@ -201,7 +203,7 @@ export default function CreateRequestScreen() {
               />
             )}
           </View>
-
+          {/* UI Lý do */}
           <View className="mb-4">
             <Text className="mb-1 font-bold">Lý do</Text>
             <TextInput
@@ -212,12 +214,12 @@ export default function CreateRequestScreen() {
               className="border border-gray-300 rounded p-2 h-24"
             />
           </View>
-
+            {/* UI người duyệt */}
           <View className="mb-4">
             <Text className="mb-1 font-bold">Người duyệt</Text>
             <Text>Lỗ Quang Tính</Text>
           </View>
-
+            {/* Button Submit */}
           <TouchableOpacity onPress={handleSubmit} className="bg-blue-500 rounded-lg py-3">
             <Text className="text-white text-center text-lg">Submit</Text>
           </TouchableOpacity>
