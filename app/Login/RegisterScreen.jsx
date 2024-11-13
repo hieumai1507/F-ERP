@@ -81,10 +81,10 @@ function RegisterPage({ props }) {
           <Image className="h-64 w-64" source={require('../../assets/images/F-ERP_Logo.png')} />
         </View>
         <View className="bg-white pt-8 pb-4 px-5 rounded-tl-3xl rounded-tr-3xl">
-          <Text className="text-3xl font-bold text-[#418dea] text-center">Register!!!</Text>
+          <Text className="text-3xl font-bold text-black text-center">F-ERP chào mừng bạn!</Text>
 
           <View className="flex flex-row justify-between items-center my-5">
-            <Text className="text-xl text-[#418dea]">Login as</Text>
+            <Text className="text-xl text-black font-bold">Login as</Text>
             <View className="flex flex-row justify-center items-center">
               <Text className="text-lg text-black">User</Text>
               <RadioButton value="User" status={userType === 'User' ? 'checked' : 'unchecked'} onPress={() => setUserType('User')} />
@@ -109,7 +109,7 @@ function RegisterPage({ props }) {
           <View className="flex flex-row items-center border border-[#420475] rounded-full px-3 py-2 mt-4">
             <FontAwesome name="user-o" color="#420475" size={24} />
             <TextInput
-              placeholder="Name"
+              placeholder="Tên"
               className="flex-1 mt-[-3px] text-[#05375a]"
               onChange={handleName}
             />
@@ -143,7 +143,7 @@ function RegisterPage({ props }) {
           <View className="flex flex-row items-center border border-[#420475] rounded-full px-3 py-2 mt-4">
             <FontAwesome name="mobile" color="#420475" size={35} />
             <TextInput
-              placeholder="Mobile"
+              placeholder="Số điện thoại"
               className="flex-1 mt-[-3px] text-[#05375a]"
               onChange={handleMobile}
               maxLength={10}
@@ -161,7 +161,7 @@ function RegisterPage({ props }) {
           <View className="flex flex-row items-center border border-[#420475] rounded-full px-3 py-2 mt-4">
             <FontAwesome name="lock" color="#420475" size={24} />
             <TextInput
-              placeholder="Password"
+              placeholder="Mật khẩu"
               className="flex-1 mt-[-3px] text-[#05375a]"
               onChange={handlePassword}
               secureTextEntry={showPassword}
@@ -181,11 +181,11 @@ function RegisterPage({ props }) {
 
         <View className="flex justify-center items-center mt-5">
           <TouchableOpacity className="bg-[#418dea] rounded-full w-3/4 py-4" onPress={() => handleSubmit()}>
-            <Text className="text-white text-xl font-bold text-center">Register</Text>
+            <Text className="text-white text-xl font-bold text-center">Đăng ký</Text>
           </TouchableOpacity>
           <View style={{ padding: 15 }}>
             <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#919191' }}>
-              ----Or you had Account----
+              ----Hoặc bạn đã có tài khoản----
             </Text>
           </View>
           <View className="items-center justify-center">
@@ -196,7 +196,7 @@ function RegisterPage({ props }) {
               }}>
               <AntDesign name="login" size={24} color="white" />
             </TouchableOpacity>
-            <Text className="text-[#418dea] font-bold text-sm mt-2">Sign In</Text>
+            <Text className="text-[#418dea] font-bold text-sm mt-2">Đăng nhập</Text>
           </View>
         </View>
         

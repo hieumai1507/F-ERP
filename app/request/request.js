@@ -23,7 +23,9 @@ const Request = () => {
   useEffect(() => {
     // Set your department list here
     setDepartments([
-      'DEV', 'Marketing', 'Data', 'PKD', 'Media', 'Vardlens', 'Kế Toán', 'HR', 'BM', 'Manager'
+      'Accountant','Admin', 'Amazon', 'Cleaner','Designer','Developer', 'Esty', 'FBA1', 'Fashion', 'Fullfillment', 'HR', 'Logistics', 
+      'Manager', 'Media1', 'Media2', 'Media3', 'PKD1', 'PKD2', 'PKD3', 'PKD4', 'PKD5', 'PKD6', 'PKD7', 'PKD8', 
+      'PKD9', 'PKD10', 'PKD11', 'PKD12', 'PKD13', 'PKD14', 'PKD15', 'Printsel','Resource','Technical','Varlders'
     ]);
 
     const fetchLeaveRequests = async () => {

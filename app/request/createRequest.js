@@ -17,6 +17,7 @@ export default function CreateRequestScreen() {
   const [thoiGianVangMat, setThoiGianVangMat] = useState('60');
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [thoiGianXinNghi, setThoiGianXinNghi] = useState('Cả ngày');
 
 
   const onChangeTime = (event, selectedDate) => {
@@ -35,7 +36,7 @@ export default function CreateRequestScreen() {
 
   const handleSubmit = async () => {
 
-    let thoiGianVangMatToSend = thoiGianVangMat; // giữ nguyên giá trị nếu type là "Ra Ngoài"
+    let thoiGianVangMatToSend = 0; // giữ nguyên giá trị nếu type là "Ra Ngoài"
     // Validation logic here (similar to previous responses)
     if (!lyDo) {
       alert("Vui lòng nhập lý do!");
@@ -65,8 +66,14 @@ export default function CreateRequestScreen() {
             return;
       }
     }
-    if(loai != "Ra Ngoài") {
-      thoiGianVangMatToSend = '0';
+    if(loai === "Ra Ngoài") {
+      thoiGianVangMatToSend = thoiGianVangMat;
+    }
+    let timeToSend = thoiGian;
+    let timeOfDayToSend = null;
+    if (loai === 'Xin nghỉ') {
+      timeToSend = null;
+      timeOfDayToSend = thoiGianXinNghi;
     }
 
     try {
@@ -74,11 +81,11 @@ export default function CreateRequestScreen() {
       const response = await axios.post('http://192.168.50.52:5001/create-leave-request', {
         token,
         type: loai,
-        time: thoiGian,
+        time: timeToSend,
         date: ngayXinPhep,
         reason: lyDo,
         thoiGianVangMat: thoiGianVangMatToSend, // include thoiGianVangMat
-    
+        timeOfDay: timeOfDayToSend, // Send the time of day
       });
     
     
@@ -118,7 +125,6 @@ export default function CreateRequestScreen() {
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between' }}>
           <Text className="text-gray-500 mb-2">Vui lòng điền đầy đủ và cẩn thận</Text>
 
-
           <View className="mb-4">
             <Text className="mb-1 font-bold">Loại</Text>
             <Picker
@@ -146,7 +152,22 @@ export default function CreateRequestScreen() {
               </Picker>
             </View>
           )}
+          {loai === 'Xin nghỉ' && (
+          <View className="mb-4">
+            <Text className="mb-1 font-bold">Thời gian xin nghỉ</Text>
+            <Picker
+              selectedValue={thoiGianXinNghi}
+              onValueChange={(value) => setThoiGianXinNghi(value)}
+              className="border border-gray-300 rounded"
+            >
+              <Picker.Item label="Buổi sáng" value="Buổi sáng" />
+              <Picker.Item label="Buổi chiều" value="Buổi chiều" />
+              <Picker.Item label="Cả ngày" value="Cả ngày" />
+            </Picker>
+          </View>
+        )}
 
+        {loai !== 'Xin nghỉ' && (
           <View className="mb-4">
             <Text className="mb-1 font-bold">Thời gian</Text>
             <TouchableOpacity onPress={() => setShowTimePicker(true)} className="border border-gray-300 rounded p-2">
@@ -163,6 +184,7 @@ export default function CreateRequestScreen() {
               />
             )}
           </View>
+        )}
 
           <View className="mb-4">
             <Text className="mb-1 font-bold">Ngày xin phép</Text>
@@ -191,7 +213,6 @@ export default function CreateRequestScreen() {
             />
           </View>
 
-
           <View className="mb-4">
             <Text className="mb-1 font-bold">Người duyệt</Text>
             <Text>Lỗ Quang Tính</Text>
@@ -202,7 +223,9 @@ export default function CreateRequestScreen() {
           </TouchableOpacity>
 
       </ScrollView>
+
         </View>
+
     </KeyboardAvoidingView>
   );
 }

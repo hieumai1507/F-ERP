@@ -5,11 +5,13 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-
+import Feather from 'react-native-vector-icons/Feather';
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordVerify, setPasswordVerify] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLoginError = (error) => {
     if (error.response && error.response.data) {
@@ -64,11 +66,12 @@ const LoginScreen = () => {
           <Image className="h-65 w-65 mt-8" source={require('../../assets/images/F-ERP_Logo.png')} />
         </View>
         <View className="bg-white rounded-tl-30 rounded-tr-30 px-5 py-7">
-          <Text className="text-[#418dea] font-bold text-3xl text-center">Login !!!</Text>
+          <Text className="text-[#000000] font-bold text-3xl text-center">F-ERP chào mừng bạn!</Text>
+          
           <View className="flex flex-row pt-3 pb-1 mt-4 px-3 border border-[#420475] rounded-full">
             <FontAwesome name="user-o" color="#420475" className="mr-2 text-lg" />
             <TextInput
-              placeholder="Mobile or Email"
+              placeholder="Số điện thoại hoặc Email"
               className="flex-1 text-[#05375a] mt-[-12px]"
               onChange={e => setEmail(e.nativeEvent.text)}
             />
@@ -76,19 +79,27 @@ const LoginScreen = () => {
           <View className="flex flex-row pt-3 pb-1 mt-4 px-3 border border-[#420475] rounded-full">
             <FontAwesome name="lock" color="#420475" className="mr-2 text-lg" />
             <TextInput
-              placeholder="Password"
+              placeholder="Mật khẩu"
               className="flex-1 text-[#05375a] mt-[-12px]"
               onChange={e => setPassword(e.nativeEvent.text)}
+              secureTextEntry={showPassword}
             />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              {password.length > 0 && !showPassword ? (
+                <Feather name="eye-off" color={passwordVerify ? 'green' : 'black'} size={23} />
+              ) : (
+                <Feather name="eye" color={passwordVerify ? 'green' : 'black'} size={23} />
+              )}
+            </TouchableOpacity>
           </View>
         </View>
         <View className="items-center mt-[-5px] text-center mx-5">
           <TouchableOpacity className="w-3/4 bg-[#418dea] items-center px-4 py-4 rounded-full" onPress={() => handleSubmit()}>
-            <Text className="text-white text-lg font-bold text-center">Log in</Text>
+            <Text className="text-white text-lg font-bold text-center">Đăng nhập</Text>
           </TouchableOpacity>
           <View style={{ padding: 15 }}>
             <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#919191' }}>
-              ----Or Continue as----
+              ----Hoặc tiếp tục với----
             </Text>
           </View>
           <View className="items-center justify-center">
@@ -103,7 +114,7 @@ const LoginScreen = () => {
                 className="text-white text-2xl"
               />
             </TouchableOpacity>
-            <Text className="text-[#418dea] font-bold text-sm mt-2">Sign Up</Text>
+            <Text className="text-[#418dea] font-bold text-sm mt-2">Đăng ký</Text>
           </View>
         </View>
       </View>
