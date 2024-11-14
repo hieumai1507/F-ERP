@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {Text, View, StyleSheet, Image, FlatList,Alert, Dimensions } from 'react-native';
+import {Text, View, StyleSheet, Image, FlatList,Alert, Dimensions, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import {Button} from 'react-native-paper';
@@ -7,13 +7,16 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import { TouchableOpacity } from 'react-native'; // Import TouchableOpacity
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view'; // Import TabView 
-
+import dayjs from 'dayjs';
 
 function AdminScreen({navigation}) {
   const [userData, setUserData] = useState('');
   const [allUserData, setAllUserData] = useState('');
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [index, setIndex] = useState(0); // State for the active tab
+  const [filteredRequests, setFilteredRequests] = useState([]);  // Filtered requests by status
+  const [selectedStatus, setSelectedStatus] = useState(null); // Currently selected status filter
+
   const [routes] = useState([
     { key: 'users', title: 'Users' },
     { key: 'requests', title: 'Leave Requests' }, // New tab for leave requests
@@ -46,7 +49,88 @@ function AdminScreen({navigation}) {
   useEffect(() => {
     getData();
     getAllData();
-  }, []);
+    setFilteredRequests(leaveRequests); 
+  }, [leaveRequests]);
+  //filter requests by status
+  const filterRequestsByStatus = (status) => {
+    setSelectedStatus(status);
+    if (status === null) {
+      setFilteredRequests(leaveRequests);
+    } else {
+      setFilteredRequests(leaveRequests.filter(request => request.status === status));
+    }
+  };
+
+
+  const renderLeaveRequestHeader = () => {
+    const totalRequests = leaveRequests.length;
+    const today = dayjs();
+    const requestsToday = leaveRequests.filter(request => dayjs(request.date).isSame(today, 'day')).length;  // Get the count
+
+    const statusCounts = leaveRequests.reduce((counts, request) => {
+      counts[request.status] = (counts[request.status] || 0) + 1;
+      return counts;
+    }, {});
+
+
+    return (
+      <View>  {/* Use a View to contain all header content */}
+       
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statusFilterContainer}> {/* Keep ScrollView for filters */}
+         <TouchableOpacity onPress={() => filterRequestsByStatus(null)} style={styles.statusFilterButton}>
+          <Text style={[styles.statusFilterText, !selectedStatus && styles.activeStatusFilterText]}>All</Text>
+        </TouchableOpacity>
+          {Object.keys(statusCounts).map(status => (
+            <TouchableOpacity
+              key={status}
+              onPress={() => filterRequestsByStatus(status)}
+              style={[styles.statusFilterButton, selectedStatus === status && styles.activeStatusFilterButton]}
+            >
+              <Text style={[styles.statusFilterText, selectedStatus === status && styles.activeStatusFilterText]}>
+                {status} ({statusCounts[status]})
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
+
+
+  const renderLeaveRequestsSection = () => (
+    <View style={styles.scene}>
+      {renderLeaveRequestHeader()} {/* Render the header */}
+      <FlatList
+        data={filteredRequests} // Use filtered requests
+        keyExtractor={item => item._id}
+        renderItem={renderLeaveRequest}
+        ListHeaderComponent={() => (
+          <View>
+            <Text>Total Leave Requests: {leaveRequests.length}</Text>
+            <Text>Total Leave Requests Today: {dayjs().format('MM-DD-YYYY')} : {' '}
+             {leaveRequests.filter(request => dayjs(request.date).isSame(dayjs(), 'day')).length}
+             </Text>
+            <Text style={styles.pendingTitle}>Pending Requests:</Text>
+            {leaveRequests.filter(request => request.status === 'Pending').map(request => (
+              <TouchableOpacity 
+                key={request._id} 
+                style={styles.pendingRequest}
+                onPress={() => {
+                  setFilteredRequests(leaveRequests.filter(r => r._id === request._id));
+                }}
+              >
+                <Text>
+                  {request.reason ? request.reason : 'N/A'} -{' '}
+                  {dayjs(request.date).isValid() ? dayjs(request.date).format('MM-DD-YYYY') : 'Invalid Date'} ({request.userEmail ? request.userEmail : 'N/A'})
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      />
+    </View>
+  );
+
   function signOut() {
     AsyncStorage.setItem('isLoggedIn', '');
     AsyncStorage.setItem('token', '');
@@ -173,11 +257,11 @@ const renderLeaveRequest = ({ item }) => {
   return (
   <View style={styles.card}>
   <View style={styles.cardDetails}>
-    <Text style={styles.requestInfo}>Request ID: {item._id}</Text>
+    <Text style={styles.requestInfo}>Request ID: {item._id || 'N/A'}</Text>
     {creatorInfo ? ( // Check if creatorInfo is available
       <>
-        <Text style={styles.requestInfo}>Creator Name: {creatorInfo.name}</Text>
-        <Text style={styles.requestInfo}>Creator Email: {creatorInfo.email}</Text>
+        <Text style={styles.requestInfo}>Creator Name: {creatorInfo.name || 'N/A'}</Text>
+        <Text style={styles.requestInfo}>Creator Email: {creatorInfo.email || 'N/A'}</Text>
       </>
     ): (
       <Text style={styles.requestInfo}>Creator information not found</Text>
@@ -191,7 +275,7 @@ const renderLeaveRequest = ({ item }) => {
         )}
 
 
-    <Text style={styles.requestInfo}>Reason: {item.reason}</Text>
+    <Text style={styles.requestInfo}>Reason: {item.reason || 'N/A'}</Text>
     {item.thoiGianVangMat && item.type == "Ra ngoài" && (
           <Text style={styles.requestInfo}>Time Off: {item.thoiGianVangMat}</Text>
         )}
@@ -235,20 +319,7 @@ const renderLeaveRequest = ({ item }) => {
       </View>
 
     ),
-    requests: () => (
-      <View style={styles.scene}>
-
-        {/* Leave request management interface */}
-        <FlatList
-          data={leaveRequests}
-          showsVerticalScrollIndicator={false}
-          keyExtractor={item => item._id}
-          renderItem={renderLeaveRequest} 
-        />
-
-
-      </View>
-    ),
+    requests: renderLeaveRequestsSection,
   });
 
 
@@ -378,6 +449,48 @@ const styles = StyleSheet.create({
       color: '#333',
       marginBottom: 3,
 
+    },
+    pendingTitle: {
+      fontWeight: 'bold',
+      marginTop: 10,
+      marginBottom: 5,
+      fontSize: 18,
+
+
+    },
+
+    pendingRequest: {
+      padding: 10,
+      borderWidth: 1,
+      borderColor: 'red',
+      marginBottom: 5,
+      borderRadius: 8,
+  },
+    statusFilterContainer: {
+      flexDirection: 'row',
+      marginBottom: 10,
+    },
+    statusFilterButton: {
+      backgroundColor: '#f0f0f0',
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 5,
+      marginRight: 5,
+    },
+
+
+    statusFilterText: {
+      color: '#333',
+    },
+
+    activeStatusFilterButton: {
+      backgroundColor: 'blue',
+    },
+
+    activeStatusFilterText: {
+
+      color: 'white',
+      fontWeight: 'bold',
     },
 });
 export default AdminScreen;
