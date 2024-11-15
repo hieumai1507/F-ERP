@@ -16,7 +16,7 @@ function AdminScreen({navigation}) {
   const [index, setIndex] = useState(0); // State for the active tab
   const [filteredRequests, setFilteredRequests] = useState([]);  // Filtered requests by status
   const [selectedStatus, setSelectedStatus] = useState(null); // Currently selected status filter
-
+  const [loading, setLoading] = useState(true); // add loading state
   const [routes] = useState([
     { key: 'users', title: 'Users' },
     { key: 'requests', title: 'Leave Requests' }, // New tab for leave requests
@@ -178,45 +178,38 @@ function AdminScreen({navigation}) {
   );
 
   useEffect(() => {
-    const fetchLeaveRequests = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get('http://192.168.50.52:5001/get-all-leave-requests'); // Get all leave requests
+        const leaveRequestsResponse = await axios.get('http://192.168.50.52:5001/get-all-leave-requests');
+        const userInfosResponse = await axios.get('http://192.168.50.52:5001/get-all-user');
 
-        if (response.data.status === 'ok') {
-          setLeaveRequests(response.data.data);
-        } else {
-          console.error('Error fetching leave requests:', response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching leave requests:", error);
-      }
-    };
 
-    fetchLeaveRequests();
+        if (leaveRequestsResponse.data.status === 'ok' && userInfosResponse.data.status === "Ok") {
+          setLeaveRequests(leaveRequestsResponse.data.data);
 
-    const fetchUserInfos = async () => { // Fetch all user info
-      try {
-        const response = await axios.get('http://192.168.50.52:5001/get-all-user');
-        if (response.data.status === 'ok') {
 
           const userInfosMap = {};
-          response.data.data.forEach(userInfo => {
+          userInfosResponse.data.data.forEach(userInfo => {
             userInfosMap[userInfo.email] = userInfo;
           });
           setUserInfos(userInfosMap);
 
-
+          setLoading(false); // Set loading to false after data is fetched
         } else {
-          console.error('Error fetching user infos:', response.data.data);
+          // Handle error cases for both APIs
+          console.error("Error fetching requests or user info", leaveRequestsResponse.data, userInfosResponse.data);
         }
+
       } catch (error) {
-        console.error("Error fetching user infos:", error);
+          console.error("Error fetching requests or user info", error);
       }
-
     }
-    fetchUserInfos();
-  }, []);
 
+    fetchData();
+  }, []);
+  if(loading) {
+    return <View><Text>Loading...</Text></View>;
+  }
 
 
   const handleStatusUpdate = async (requestId, newStatus) => {

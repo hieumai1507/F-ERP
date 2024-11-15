@@ -6,7 +6,9 @@ import {
   TextInput,
   ScrollView,
   StyleSheet,
-  Dimensions
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -62,172 +64,199 @@ function UpdateProfile() {
   }
   },[route.params?.data]);
   const updateProfile = async () => { 
-    const formdata = {
-      name,
-      image,
-      email,
-      department,
-      mobile,
-      gender
-    };
-    console.log(formdata);
-    try{
-    const res = await axios
-      .post('http://192.168.1.30:5001/update-user', formdata)//await the response
-      .then(res => {console.log(res.data)
-        if(res.data.status=="Ok"){
-          Toast.show({
-        type:'success',
-        text1:'Updated',
-        
-      });
-      navigation.goBack();
-        } else {
-          Toast.show({
-            type: 'error',
-            text1: 'Update Failed',
-            text2: res.data.data || 'Something went wrong'  //show the error from the server
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('mobile', mobile);
+    formData.append('gender', gender);
+    formData.append('department', department);
+    if (image) {
+      const uriParts = image.split('.');
+      const fileType = uriParts[uriParts.length - 1];
 
-          })
-        }
+        try {
+          const info = await FileSystem.getInfoAsync(image);
+          if (info.exists) {
+              formData.append('image', {
+                uri: image,
+                name: `photo.${fileType}`,
+                type: `image/${fileType}`,
+             });
+          } else {
+              throw new Error("File does not exist in local file system")
+          }
+      } catch (error) {
+          console.log(error.message);
+      }
+    }
+
+    try {
+      const res = await axios.post('http://192.168.50.52:5001/update-user', formData, { // Use correct IP if different
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
+
+      if (res.data.status === "Ok") {
+        Toast.show({ type: 'success', text1: 'Updated' });
+        navigation.goBack();
+      } else {
+        // Handle errors and display specific error messages
+        Toast.show({
+          type: 'error',
+          text1: 'Update Failed',
+          text2: res.data.data || 'Something went wrong',
+        });
+        console.error("Server Error:", res.data.data || 'Something went wrong');
+      }
     } catch (error) {
-      console.error("Error updating profile:", error);
+      // Handle network or other errors
       Toast.show({
         type: 'error',
-        text: 'Update Failed',
-        text2: 'Network error or server issue'
+        text1: 'Update Failed',
+        text2: 'Network error or server issue',
       });
+      console.error("Error updating profile:", error);
+
+        if (error.response) {
+          console.error("Server responded with:", error.response.data); // Log detailed server error
+          Alert.alert('Update Failed', error.response.data || 'Server error');
+      } else if (error.request) {
+          console.error("No response from server:", error.request); // Log the request
+          Alert.alert('Update Failed', 'No response from server');
+
+      } else {
+          console.error("Error setting up the request:", error.message);
+          Alert.alert('Update Failed', error.message);
+
+      }
     }
   };
 
   return (
-    <ScrollView
-      keyboardShouldPersistTaps={'always'}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{paddingBottom: 40}}>
-      <View>
-        <View style={styles.header}>
-          <View style={{flex: 1}}>
-          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-2">
-            <Ionicons name="chevron-back" size={24} color="white" />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'} // Điều chỉnh behavior dựa trên hệ điều hành
+      style={{ flex: 1 }} // Đảm bảo KeyboardAvoidingView chiếm toàn bộ màn hình
+    >
+      <ScrollView
+        keyboardShouldPersistTaps={'always'}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{paddingBottom: 40}}>
+        <View>
+          <View style={styles.header}>
+            <View style={{flex: 1}}>
+            <TouchableOpacity onPress={() => navigation.goBack()} className="mr-2">
+              <Ionicons name="chevron-back" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+            <View style={{flex: 3}}>
+              <Text style={styles.nameText}>Edit Profile</Text>
+            </View>
+            <View style={{flex: 1}}></View>
+          </View>
+          <View style={styles.camDiv}>
+            <View style={styles.camIconDiv}>
+              <Back name="camera" size={22} style={styles.cameraIcon} onPress={() => route.back()} />
+            </View>
+
+            <TouchableOpacity onPress={() => selectPhoto()}>
+              <Avatar.Image
+                size={140}
+                style={styles.avatar}
+                source={{
+                  uri:
+                  image==""|| image==null
+                      ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQMAAADCCAMAAAB6zFdcAAAAM1BMVEXFzeD////Byt7L0uPByd7Q1+b7/P3j5/Dv8fbe4+3r7vTFzuDL0+P19/rn6/LZ3urW2+lU+LHUAAAFLklEQVR4nO2dC3arMAxEQXwCcfjsf7XPkLw2tEka5AEziu8CeuKpJVmyLLIskUgkEkdFbsT+HXEQKbNqOPWN59y72D9nd/z/vWqbOv/mozSY9n116vIl1acYg1++G9v+5/rzvMs+QwL/7x/O9a/lT5zL2D9uF7wAzcP1e+pP2AQi4/mZAJ6TfQ3EtY9N4D+jdQ2k6F8K4OltayDFKyP4cghmI6PzVvDnHrDuEqR9UwFPY1IEufw+C72yh8LeIUFOaxSY6K0dFt2qTXDDVJCUi0IBT2vHHmTUSWAnPjgZtBJ4p2BjJ4RIYCSHlCpEAi+CAXMowiSwIIJoguKSE7k5rD8aPWDg3gnKg8EPLrGXEUL5tGC2ijr2OkIIjAlfEJdVBLMNcmprQEnAW09YUzT5C9aNADgbfMGaPQlOgrwj1cAlDZIGGVYD2ktIpAasiRNQgzxpkOektoCMjUkDT+zFaEFqwNqohtSgiL0YHcHlVAMaoCooM6SJo/qK7RGk+yBpkGVBl2w2NAi7aEwamNEAWE5MGiQNkgZJg6RB0sCEBoj+C3YN0j5IGkyks3LKnSegdaSkQdIgaUCtwcf7RJHy02OjVG3/+knvSlxJd+uK7Emb6eqOrQVBoJvgCtu16xYasF23QXsPWDVI+yArN9CALTyW6LhAqAE8NuaEcQH2fOMbtkNS+e7IC8MaYIuJM3TnRGwxcYbvPQ+0eDBD95TFIRv3rwyx17Qa/EGRbmqSAz1xvSP2ktaDvW3MOV9xoJ0i43tftEPgc4n4U1Ls9ajAbgTOkSCh02AW1GxJ4w2gCKwSIAspF0pLmIB5BNaXvhnwnMSXMn6DqrBzBoUrqKoiXdp8B6qqWMVeSADyzijhNyDeBiinyOwSUc95uAemYZ66sl0wLYGcFPmK6gsgCTRzZJxAlJe5TQFyQiA3hQxRVuSOChPBXrEW2trBf/RDts1sg+C8iXZA1oKwc9IY++dDCDojUKcKd5T67JF6ou4C9SHBhjO4os2hiWupv1Hm0JY00LpFKx5xQmsLpjRQdisy19R/om3MsaSB9rxsSgOdBKY00E5SZOxBeoa2kGJJA+01gyEN1JmjJQ20jxnYq+p3qPNGQxqo66qtHQ3UfUlJA0MalKJ+8NnyPfh/hFzOnbpFr6vP7JeNGaALw0BJMfzemT4+IhqSYq8hFESDInNj3ky4BPSXroieLPZDAuI7nuROsUS84iAvqKmT5gWxVxEIQgJuY8BsA+6NgPmyMXVkQHXuM+cMuBEIjO98Z4K78r5pOFtVpWiRn7Qd+aop5QU9AqJuMyYVRKoNJkT58OD/cuy1vYUX4LTBvLgrzVAcXwYpthPgSjcc2ybkgjoRvKQvjqrCVl7gEU11RJMQGTeYFvicbjyaCnsrMFG3R1JBsnZjR/hEhf4gJiHi0NOg1nCOL8OejvAJ3RBTBScy7O4GHlCfXCwV4hrBkvMlQmYpZXQjWLJ7sJTyEEawZNfMsowUC/+m38kxiNtgbDCMZgfHIMUuaVEA3cYnBnx5aAu8e9xMASkYFJjoNpo/K+7oVnBPg68xuKw8zoHoPXp0pCzHg0bDV0CTa3EsjmBJjUunsB9u35Ua08wkGecmuIEIEVIReoIFwTf38JHhEQgcxuqOlx4qCBFBCnY7uKH/uhV0SHRU9CNFUO1EB0A9TMKIIczoggP+QxpRUQ0cM+MMrmiezG7x0bmoKDYCZhLqgVjf8WvhfLhkfaPnFt/di8zq6XNbfIczMqsHDW3xTdrYPFvrP7kiUsVMV4ODAAAAAElFTkSuQmCC'
+                      : image,
+                }}
+              />
             </TouchableOpacity>
           </View>
-          <View style={{flex: 3}}>
-            <Text style={styles.nameText}>Edit Profile</Text>
-          </View>
-          <View style={{flex: 1}}></View>
-        </View>
-        <View style={styles.camDiv}>
-          <View style={styles.camIconDiv}>
-            <Back name="camera" size={22} style={styles.cameraIcon} onPress={() => route.back()} />
-          </View>
 
-          <TouchableOpacity onPress={() => selectPhoto()}>
-            <Avatar.Image
-              size={140}
-              style={styles.avatar}
-              source={{
-                uri:
-                 image==""|| image==null
-                    ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQMAAADCCAMAAAB6zFdcAAAAM1BMVEXFzeD////Byt7L0uPByd7Q1+b7/P3j5/Dv8fbe4+3r7vTFzuDL0+P19/rn6/LZ3urW2+lU+LHUAAAFLklEQVR4nO2dC3arMAxEQXwCcfjsf7XPkLw2tEka5AEziu8CeuKpJVmyLLIskUgkEkdFbsT+HXEQKbNqOPWN59y72D9nd/z/vWqbOv/mozSY9n116vIl1acYg1++G9v+5/rzvMs+QwL/7x/O9a/lT5zL2D9uF7wAzcP1e+pP2AQi4/mZAJ6TfQ3EtY9N4D+jdQ2k6F8K4OltayDFKyP4cghmI6PzVvDnHrDuEqR9UwFPY1IEufw+C72yh8LeIUFOaxSY6K0dFt2qTXDDVJCUi0IBT2vHHmTUSWAnPjgZtBJ4p2BjJ4RIYCSHlCpEAi+CAXMowiSwIIJoguKSE7k5rD8aPWDg3gnKg8EPLrGXEUL5tGC2ijr2OkIIjAlfEJdVBLMNcmprQEnAW09YUzT5C9aNADgbfMGaPQlOgrwj1cAlDZIGGVYD2ktIpAasiRNQgzxpkOektoCMjUkDT+zFaEFqwNqohtSgiL0YHcHlVAMaoCooM6SJo/qK7RGk+yBpkGVBl2w2NAi7aEwamNEAWE5MGiQNkgZJg6RB0sCEBoj+C3YN0j5IGkyks3LKnSegdaSkQdIgaUCtwcf7RJHy02OjVG3/+knvSlxJd+uK7Emb6eqOrQVBoJvgCtu16xYasF23QXsPWDVI+yArN9CALTyW6LhAqAE8NuaEcQH2fOMbtkNS+e7IC8MaYIuJM3TnRGwxcYbvPQ+0eDBD95TFIRv3rwyx17Qa/EGRbmqSAz1xvSP2ktaDvW3MOV9xoJ0i43tftEPgc4n4U1Ls9ajAbgTOkSCh02AW1GxJ4w2gCKwSIAspF0pLmIB5BNaXvhnwnMSXMn6DqrBzBoUrqKoiXdp8B6qqWMVeSADyzijhNyDeBiinyOwSUc95uAemYZ66sl0wLYGcFPmK6gsgCTRzZJxAlJe5TQFyQiA3hQxRVuSOChPBXrEW2trBf/RDts1sg+C8iXZA1oKwc9IY++dDCDojUKcKd5T67JF6ou4C9SHBhjO4os2hiWupv1Hm0JY00LpFKx5xQmsLpjRQdisy19R/om3MsaSB9rxsSgOdBKY00E5SZOxBeoa2kGJJA+01gyEN1JmjJQ20jxnYq+p3qPNGQxqo66qtHQ3UfUlJA0MalKJ+8NnyPfh/hFzOnbpFr6vP7JeNGaALw0BJMfzemT4+IhqSYq8hFESDInNj3ky4BPSXroieLPZDAuI7nuROsUS84iAvqKmT5gWxVxEIQgJuY8BsA+6NgPmyMXVkQHXuM+cMuBEIjO98Z4K78r5pOFtVpWiRn7Qd+aop5QU9AqJuMyYVRKoNJkT58OD/cuy1vYUX4LTBvLgrzVAcXwYpthPgSjcc2ybkgjoRvKQvjqrCVl7gEU11RJMQGTeYFvicbjyaCnsrMFG3R1JBsnZjR/hEhf4gJiHi0NOg1nCOL8OejvAJ3RBTBScy7O4GHlCfXCwV4hrBkvMlQmYpZXQjWLJ7sJTyEEawZNfMsowUC/+m38kxiNtgbDCMZgfHIMUuaVEA3cYnBnx5aAu8e9xMASkYFJjoNpo/K+7oVnBPg68xuKw8zoHoPXp0pCzHg0bDV0CTa3EsjmBJjUunsB9u35Ua08wkGecmuIEIEVIReoIFwTf38JHhEQgcxuqOlx4qCBFBCnY7uKH/uhV0SHRU9CNFUO1EB0A9TMKIIczoggP+QxpRUQ0cM+MMrmiezG7x0bmoKDYCZhLqgVjf8WvhfLhkfaPnFt/di8zq6XNbfIczMqsHDW3xTdrYPFvrP7kiUsVMV4ODAAAAAElFTkSuQmCC'
-                    : image,
-              }}
-            />
-          </TouchableOpacity>
-        </View>
+          <View
+            style={{
+              marginTop: 50,
+              marginHorizontal: 22,
+            }}>
+            <View style={styles.infoEditView}>
+              <Text style={styles.infoEditFirst_text}>Username</Text>
+              <TextInput
+                placeholder="Your Name"
+                placeholderTextColor={'#999797'}
+                style={styles.infoEditSecond_text}
+                onChange={setName}
+                value={name}
+              />
+            </View>
 
-        <View
-          style={{
-            marginTop: 50,
-            marginHorizontal: 22,
-          }}>
-          <View style={styles.infoEditView}>
-            <Text style={styles.infoEditFirst_text}>Username</Text>
-            <TextInput
-              placeholder="Your Name"
-              placeholderTextColor={'#999797'}
-              style={styles.infoEditSecond_text}
-              onChange={setName}
-              value={name}
-            />
-          </View>
+            <View style={styles.infoEditView}>
+              <Text style={styles.infoEditFirst_text}>Email</Text>
+              <TextInput
+                editable={false}
+                placeholder="Your Email"
+                placeholderTextColor={'#999797'}
+                style={styles.infoEditSecond_text}
+                onChange={e => setEmail(e.nativeEvent.text)}
+                defaultValue={email}
+              />
+            </View>
 
-          <View style={styles.infoEditView}>
-            <Text style={styles.infoEditFirst_text}>Email</Text>
-            <TextInput
-              editable={false}
-              placeholder="Your Email"
-              placeholderTextColor={'#999797'}
-              style={styles.infoEditSecond_text}
-              onChange={e => setEmail(e.nativeEvent.text)}
-              defaultValue={email}
-            />
-          </View>
+            <View style={styles.infoEditView}>
+              <Text style={styles.infoEditFirst_text}>Gender:</Text>
 
-          <View style={styles.infoEditView}>
-            <Text style={styles.infoEditFirst_text}>Gender</Text>
-
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <View style={styles.radioView}>
-                <Text style={styles.radioText}>Male</Text>
-                <RadioButton
-                  value="Male"
-                  status={gender === 'Male' ? 'checked' : 'unchecked'}
-                  onPress={() => {
-                    setGender('Male');
-                  }}
-                />
-              </View>
-              <View style={styles.radioView}>
-                <Text style={styles.radioText}>Female</Text>
-                <RadioButton
-                  value="Female"
-                  status={gender === 'Female' ? 'checked' : 'unchecked'}
-                  onPress={() => {
-                    setGender('Female');
-                  }}
-                />
+              <View style={styles.genderButtonContainer}>
+                <TouchableOpacity
+                  style={[styles.genderButton, gender === 'Male' && styles.selectedGenderButton]}
+                  onPress={() => setGender('Male')}
+                >
+                  <Text style={[styles.genderButtonText, gender === 'Male' && styles.selectedGenderButtonText]}>Male</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.genderButton, gender === 'Female' && styles.selectedGenderButton]}
+                  onPress={() => setGender('Female')}
+                >
+                  <Text style={[styles.genderButtonText, gender === 'Female' && styles.selectedGenderButtonText]}>Female</Text>
+                </TouchableOpacity>
               </View>
             </View>
-          </View>
-          <View style={styles.infoEditView}>
-            <Text style={styles.infoEditFirst_text}>Department</Text>
-            <TextInput
-              placeholder="Department"
-              placeholderTextColor={'#999797'}
-              keyboardType="numeric"
-              maxLength={10}
-              style={styles.infoEditSecond_text}
-              onChange={e => setDepartment(e.nativeEvent.text)}
-              defaultValue={department}
-            />
-          </View>
-
-          <View style={styles.infoEditView}>
-            <Text style={styles.infoEditFirst_text}>Mobile No</Text>
-            <TextInput
-              placeholder="Your Mobile No"
-              placeholderTextColor={'#999797'}
-              keyboardType="numeric"
-              maxLength={10}
-              style={styles.infoEditSecond_text}
-              onChange={e => setMobile(e.nativeEvent.text)}
-              defaultValue={mobile}
-            />
-          </View>
-        </View>
-        <View style={styles.button}>
-          <TouchableOpacity
-            onPress={() => updateProfile()}
-            style={styles.inBut}>
-            <View>
-              <Text style={styles.textSign}>Update Profile</Text>
+            <View style={styles.infoEditView}>
+              <Text style={styles.infoEditFirst_text}>Department</Text>
+              <TextInput
+                placeholder="Department"
+                placeholderTextColor={'#999797'}
+                keyboardType="default"
+                maxLength={10}
+                style={styles.infoEditSecond_text}
+                onChange={e => setDepartment(e.nativeEvent.text)}
+                defaultValue={department}
+              />
             </View>
-          </TouchableOpacity>
+
+            <View style={styles.infoEditView}>
+              <Text style={styles.infoEditFirst_text}>Mobile No</Text>
+              <TextInput
+                placeholder="Your Mobile No"
+                placeholderTextColor={'#999797'}
+                keyboardType="numeric"
+                maxLength={10}
+                style={styles.infoEditSecond_text}
+                onChange={e => setMobile(e.nativeEvent.text)}
+                defaultValue={mobile}
+              />
+            </View>
+          </View>
+          <View style={styles.button}>
+            <TouchableOpacity
+              onPress={() => updateProfile()}
+              style={styles.inBut}>
+              <View>
+                <Text style={styles.textSign}>Update Profile</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -326,12 +355,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderColor: '#e6e6e6',
     borderBottomWidth: 1,
-    paddingBottom: 5,
+    borderBottomColor: '#ccc',
+    paddingBottom: 12,
   },
   infoEditFirst_text: {
     color: '#7d7c7c',
     fontSize: 16,
     fontWeight: '400',
+    marginRight: 12,
   },
   infoEditSecond_text: {
     color: 'black',
@@ -341,14 +372,25 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
     textAlign: 'right',
   },
-  radioView: {
+  genderButtonContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  radioText: {
-    color: 'black',
-    fontSize: 15,
+  genderButton: {
+    backgroundColor: '#e0e0e0', // Light gray
+    borderRadius: 20, // Rounded buttons
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginRight: 8,
+  },
+  selectedGenderButton: {
+    backgroundColor: '#2196F3', // Blue for selected (adjust as needed)
+  },
+  genderButtonText: {
+    fontSize: 14, // Slightly smaller font size
+    color: '#333', // Dark gray
+  },
+  selectedGenderButtonText: {
+    color: 'white',
   },
 });
 export default UpdateProfile;

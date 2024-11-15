@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Text, View, TouchableOpacity } from "react-native";
 import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
@@ -6,7 +6,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 const ProfileScreen = () => {
   const router = useRouter(); 
   const user = useSelector((state) => state.auth.user);
-
+  useEffect(() => {
+    console.log("User updated:", user);
+  }, [user]);
   function signOut() {
     AsyncStorage.setItem('isLoggedIn', '');
     AsyncStorage.setItem('token', '');
@@ -20,7 +22,10 @@ const ProfileScreen = () => {
         <Text className="text-4xl font-bold mb-6">User Profile</Text>
         {user ? (
           <>
-            <Text className="text-lg mb-4">Phone Number: {user.PhoneNumber}</Text>
+            <Text className="text-lg mb-4">Phone Number: {user.mobile}</Text>
+            <Text className="text-lg mb-4">Email: {user.email}</Text>
+            <Text className="text-lg mb-4">Name: {user.Name}</Text>
+            <Text className="text-lg mb-4">Department: {user.department}</Text>
             <TouchableOpacity
               className="h-12 bg-purple-600 justify-center items-center rounded-lg px-5 mt-4"
               onPress={() => signOut()}
@@ -29,7 +34,7 @@ const ProfileScreen = () => {
             </TouchableOpacity>
           </>
         ) : (
-          <Text className="text-lg mb-4">No user logged in</Text>
+          <Text className="text-lg mb-4">Loading user data...</Text>
         )}
       </View>
     </ProtectedRoute>

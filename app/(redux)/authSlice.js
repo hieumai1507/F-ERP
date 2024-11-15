@@ -50,8 +50,10 @@ export default authSlice.reducer;
 export const loadUser = () => async (dispatch) => {
   const user = await loadUserFromStorage();
   if (user) {
+    console.log('Loaded user from AsyncStorage:', user);
     dispatch(setUser(user));
   } else {
+    console.log('No user found in AsyncStorage');
     dispatch(setLoading(false));
   }
 };

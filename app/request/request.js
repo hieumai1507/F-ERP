@@ -31,16 +31,23 @@ const Request = () => {
     const fetchLeaveRequests = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
+        if(!token) {
+          console.error("Token not found");
+          return;
+        }
         const response = await axios.get('http://192.168.50.52:5001/get-leave-requests', {
-          params: { token } 
+          params: { token } //sending token as a query parameter
         });
         if (response.data.status === 'ok') {
           setLeaveRequests(response.data.data);
         } else {
+          // log the error and display a more user-friendly message
           console.error('Error fetching leave requests:', response.data.data);
+          alert('Failed to load leave reaquests');
         }
       } catch (error) {
         console.error("Error fetching leave requests:", error);
+        alert("Failed to load leave requests");
       } finally {
         setLoading(false);
       }
