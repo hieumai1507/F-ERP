@@ -39,7 +39,7 @@ function RegisterPage({ props }) {
       return Alert.alert('Invalid Admin');
     }
     axios
-      .post('http://192.168.50.52:5001/register', userData)
+      .post('http://192.168.50.53:5001/register', userData)
       .then(res => {
         if (res.data.status == 'ok') {
           Alert.alert('Registered Successfully!!');
@@ -96,12 +96,32 @@ function RegisterPage({ props }) {
             <View className="flex flex-row justify-between items-center my-5">
               <Text className="text-xl text-black font-bold">Login as</Text>
               <View className="flex flex-row justify-center items-center">
-                <Text className="text-lg text-black">User</Text>
-                <RadioButton value="User" status={userType === 'User' ? 'checked' : 'unchecked'} onPress={() => setUserType('User')} />
+              <TouchableOpacity
+                  onPress={() => setUserType('User')}
+                  className={`flex flex-row items-center px-4 py-2 rounded-full ${userType === 'User' ? 'bg-blue-500' : 'bg-gray-200'}`}
+                >
+                  <RadioButton
+                    value="User"
+                    status={userType === 'User' ? 'checked' : 'unchecked'}
+                    onPress={() => setUserType('User')}
+                    color="#fff" // Đặt màu trắng cho nút radio khi được chọn
+                  />
+                    <Text className={`text-lg ${userType === 'User' ? 'text-white' : 'text-black'} ml-2`}>User</Text>
+              </TouchableOpacity>
               </View>
               <View className="flex flex-row justify-center items-center">
-                <Text className="text-lg text-black">Admin</Text>
-                <RadioButton value="Admin" status={userType === 'Admin' ? 'checked' : 'unchecked'} onPress={() => setUserType('Admin')} />
+              <TouchableOpacity
+                onPress={() => setUserType('Admin')}
+                className={`flex flex-row items-center px-4 py-2 rounded-full ${userType === 'Admin' ? 'bg-blue-500' : 'bg-gray-200'}`}
+              >
+                <RadioButton
+                  value="Admin"
+                  status={userType === 'Admin' ? 'checked' : 'unchecked'}
+                  onPress={() => setUserType('Admin')}
+                  color="#fff" // Đặt màu trắng cho nút radio khi được chọn
+                />
+                <Text className={`text-lg ${userType === 'Admin' ? 'text-white' : 'text-black'} ml-2`}>Admin</Text>
+              </TouchableOpacity>
               </View>
             </View>
 

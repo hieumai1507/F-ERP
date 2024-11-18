@@ -35,7 +35,7 @@ const Request = () => {
           console.error("Token not found");
           return;
         }
-        const response = await axios.get('http://192.168.50.52:5001/get-leave-requests', {
+        const response = await axios.get('http://192.168.50.53:5001/get-leave-requests', {
           params: { token } //sending token as a query parameter
         });
         if (response.data.status === 'ok') {

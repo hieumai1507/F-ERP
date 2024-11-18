@@ -9,7 +9,7 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const fetchUserInfos = async () => {
       try {
-        const response = await axios.get('http://192.168.50.52:5001/get-all-user');
+        const response = await axios.get('http://192.168.50.53:5001/get-all-user');
         if (response.data.status === 'ok') {
           const userInfosMap = {};
           response.data.data.forEach(userInfo => {

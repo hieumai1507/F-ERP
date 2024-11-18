@@ -43,9 +43,9 @@ const LoginScreen = () => {
       password,
     };
 
-    axios.post('http://192.168.50.52:5001/login-user', userData).then(res => {
+    axios.post('http://192.168.50.53:5001/login-user', userData).then(res => {
       console.log(res.data);
-      if (res.data.status === 'ok') {
+      if (res.status === 200 && res.data.status === 'ok') {
         Alert.alert('Logged In Successfully');
         AsyncStorage.setItem('token', res.data.data);
         AsyncStorage.setItem('isLoggedIn', JSON.stringify(true));
@@ -57,12 +57,12 @@ const LoginScreen = () => {
         }
       }else {
         // wrong user 
-        handleLoginError({ response: { data: res.data } });
+        handleLoginError({ response: res });
       }
     })
     .catch(error => {
       //chek what this error is in the logs
-      console.erroe("Axois catch block", error);
+      console.error("Axios catch block", error);
       //if there is a response, handle it 
       if(error.response) { handleLoginError(error); }
 

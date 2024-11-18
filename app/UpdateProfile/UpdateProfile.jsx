@@ -91,7 +91,7 @@ function UpdateProfile() {
     }
 
     try {
-      const res = await axios.post('http://192.168.50.52:5001/update-user', formData, { // Use correct IP if different
+      const res = await axios.post('http://192.168.50.53:5001/update-user', formData, { // Use correct IP if different
         headers: {
           'Content-Type': 'multipart/form-data',
         },

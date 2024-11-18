@@ -26,7 +26,7 @@ function AdminScreen({navigation}) {
     width: Dimensions.get('window').width,
   });
   async function getAllData() {
-    axios.get('http://192.168.50.52:5001/get-all-user').then(res => {
+    axios.get('http://192.168.50.53:5001/get-all-user').then(res => {
       console.log(res.data);
       setAllUserData(res.data.data);
     })
@@ -40,7 +40,7 @@ function AdminScreen({navigation}) {
     const token = await AsyncStorage.getItem('token');
     console.log(token);
     axios
-      .post('http://192.168.50.52:5001/userdata', {token: token})
+      .post('http://192.168.50.53:5001/userdata', {token: token})
       .then(res => {
         console.log(res.data);
         setUserData(res.data.data);
@@ -140,7 +140,7 @@ function AdminScreen({navigation}) {
 
   function deleteUser(data) {
     axios
-      .post('http://192.168.50.52:5001/delete-user', {id: data._id})
+      .post('http://192.168.50.53:5001/delete-user', {id: data._id})
       .then(res => {
         console.log(res.data);
         if(res.data.status=="Ok"){
@@ -180,8 +180,8 @@ function AdminScreen({navigation}) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const leaveRequestsResponse = await axios.get('http://192.168.50.52:5001/get-all-leave-requests');
-        const userInfosResponse = await axios.get('http://192.168.50.52:5001/get-all-user');
+        const leaveRequestsResponse = await axios.get('http://192.168.50.53:5001/get-all-leave-requests');
+        const userInfosResponse = await axios.get('http://192.168.50.53:5001/get-all-user');
 
 
         if (leaveRequestsResponse.data.status === 'ok' && userInfosResponse.data.status === "Ok") {
@@ -214,7 +214,7 @@ function AdminScreen({navigation}) {
 
   const handleStatusUpdate = async (requestId, newStatus) => {
     try {
-      const response = await axios.post('http://192.168.50.52:5001/update-leave-request-status', {
+      const response = await axios.post('http://192.168.50.53:5001/update-leave-request-status', {
         requestId,
         status: newStatus
       });

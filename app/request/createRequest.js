@@ -84,7 +84,7 @@ export default function CreateRequestScreen() {
 
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.post('http://192.168.50.52:5001/create-leave-request', {
+      const response = await axios.post('http://192.168.50.53:5001/create-leave-request', {
         token,
         type: loai,
         time: timeToSend,
