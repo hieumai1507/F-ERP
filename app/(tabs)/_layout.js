@@ -5,7 +5,7 @@ import { Tabs } from "expo-router";
 
 function TabLayout() {
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
+    <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: "#005AB4" }}>
 
       <Tabs.Screen 
         name="HomeScreen" 

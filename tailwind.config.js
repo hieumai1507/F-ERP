@@ -9,7 +9,12 @@ module.exports = {
    theme: {
      extend: {
        fontFamily: {
-         rmono: ['Roboto-Mono', 'sans-serif']
+         rmono: ['sans-serif', 'Roboto-Mono',  "BeVietNam Pro", "OpenSans"]
+       },
+       fontSize: {
+        '20': "20px",
+        '14': "14px",
+        '16': '16px',
        }
      },
    },

@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import CustomPicker from "@/components/CustomPicker"
 
 export default function CreateRequestScreen() {
   const navigation = useNavigation();
@@ -119,7 +120,7 @@ export default function CreateRequestScreen() {
             <TouchableOpacity onPress={() => navigation.goBack()} className="mr-2">
               <Ionicons name="chevron-back" size={24} color="white" />
             </TouchableOpacity>
-            <Text className="text-2xl font-bold text-center flex-1 mx-4 text-white">Tạo đơn</Text>
+            <Text className="text-[16px] font-bold text-center flex-1 mx-4 text-white">Tạo đơn</Text>
           </View>
         <View className="flex-1 bg-white p-4">
           
@@ -128,44 +129,35 @@ export default function CreateRequestScreen() {
           {/* //UI display input loại */}
           <View className="mb-4">
             <Text className="mb-1 font-bold">Loại</Text>
-            <Picker
+            <CustomPicker
+              items={['Đi muộn', 'Về sớm', 'Xin nghỉ', 'Ra ngoài']}
               selectedValue={loai}
-              onValueChange={(itemValue) => setLoai(itemValue)}
-              className="border border-gray-300 rounded"
-            >
-              <Picker.Item label="Đi Muộn" value="Đi muộn" />
-              <Picker.Item label="Về Sớm" value="Về sớm" />
-              <Picker.Item label="Xin nghỉ" value="Xin nghỉ" />
-              <Picker.Item label="Ra Ngoài" value="Ra ngoài" />
-            </Picker>
+              onValueChange={(value) => setLoai(value)}
+              placeholder="Chọn loại"
+             />
           </View>
           {/* //UI loại = Ra ngoài */}
           {loai === 'Ra ngoài' && (
             <View className="mb-4 ">
               <Text className="mb-1 font-bold">Thời gian vắng mặt</Text>
-              <Picker
+              <CustomPicker
+                items={['60', '120']}
                 selectedValue={thoiGianVangMat}
                 onValueChange={(value) => setThoiGianVangMat(value)}
-                className="border border-gray-300 rounded"
-              >
-                <Picker.Item label="60 phút" value="60" />
-                <Picker.Item label="120 phút" value="120" />
-              </Picker>
+                placeholder="Chọn thời gian"
+               />
             </View>
           )}
           {/* //UI loại = Xin Nghỉ: Thời gian xin nghỉ */}
           {loai === 'Xin nghỉ' && (
           <View className="mb-4">
             <Text className="mb-1 font-bold">Thời gian xin nghỉ</Text>
-            <Picker
+            <CustomPicker 
+              items={["Buổi sáng", "Buổi chiều", "Cả ngày"]}
               selectedValue={thoiGianXinNghi}
               onValueChange={(value) => setThoiGianXinNghi(value)}
-              className="border border-gray-300 rounded"
-            >
-              <Picker.Item label="Buổi sáng" value="Buổi sáng" />
-              <Picker.Item label="Buổi chiều" value="Buổi chiều" />
-              <Picker.Item label="Cả ngày" value="Cả ngày" />
-            </Picker>
+              placeholder="Chọn giờ nghỉ"
+            />
           </View>
         )}
         {/* //UI loại khác xin nghỉ : Thời gian */}
@@ -220,7 +212,7 @@ export default function CreateRequestScreen() {
             <Text>Lỗ Quang Tính</Text>
           </View>
             {/* Button Submit */}
-          <TouchableOpacity onPress={handleSubmit} className="bg-blue-500 rounded-lg py-3">
+          <TouchableOpacity onPress={handleSubmit} className="bg-[#0B6CA7] rounded-lg py-3">
             <Text className="text-white text-center text-lg">Submit</Text>
           </TouchableOpacity>
 

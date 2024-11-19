@@ -6,7 +6,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import Error from 'react-native-vector-icons/MaterialIcons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { RadioButton } from 'react-native-paper';
 import { router } from 'expo-router';
@@ -22,7 +22,7 @@ function RegisterPage({ props }) {
   const [password, setPassword] = useState('');
   const [passwordVerify, setPasswordVerify] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [userType, setUserType] = useState('');
+  const [userType, setUserType] = useState('User');
   const [secretText, setSecretText] = useState('');
 
   const navigation = useNavigation();
@@ -54,7 +54,9 @@ function RegisterPage({ props }) {
         Alert.alert('Error', "Registration failed, Please try again");
       });
   }
-
+    useEffect(() => {
+      setUserType('User');
+    }, []);
   function handleName(e) {
     const nameVar = e.nativeEvent.text;
     setName(nameVar);
@@ -85,12 +87,12 @@ function RegisterPage({ props }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
-      <ScrollView className="flex-grow bg-white" contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps={'always'}>
+      <ScrollView className="flex-grow " contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps={'always'}>
         <View className="flex-1">
           <View className="justify-center items-center my-8">
             <Image className="h-[140px] w-[130px]" source={require('../../assets/images/F-ERP_Logo.png')} />
           </View>
-          <View className="bg-white pt-8 pb-4 px-5 rounded-tl-3xl rounded-tr-3xl">
+          <View className=" pt-8 pb-4 px-5 rounded-tl-3xl rounded-tr-3xl">
             <Text className="text-3xl font-bold text-black text-center">F-ERP chào mừng bạn!</Text>
 
             <View className="flex flex-row justify-between items-center my-5">
@@ -126,7 +128,7 @@ function RegisterPage({ props }) {
             </View>
 
             {userType === 'Admin' && (
-              <View className="flex flex-row items-center border border-[#420475] rounded-full px-3 py-2 mt-4">
+              <View className="flex flex-row items-center border border-[#0B6CA7] rounded-full px-3 py-2 mt-4">
                 <FontAwesome name="user-o" color="#420475" size={24} />
                 <TextInput
                   placeholder="Secret Text"
@@ -136,7 +138,7 @@ function RegisterPage({ props }) {
               </View>
             )}
 
-            <View className="flex flex-row items-center border border-[#420475] rounded-full px-3 py-2 mt-4">
+            <View className="flex flex-row items-center border border-[#0B6CA7] rounded-full px-3 py-2 mt-4">
               <FontAwesome name="user-o" color="#420475" size={24} />
               <TextInput
                 placeholder="Tên"
@@ -188,7 +190,7 @@ function RegisterPage({ props }) {
               <Text className="ml-5 text-red-500">Phone number must start with 0 and have 10 digits</Text>
             )}
 
-            <View className="flex flex-row items-center border border-[#420475] rounded-full px-3 py-2 mt-4">
+            <View className="flex flex-row items-center border border-[#0B6CA7] rounded-full px-3 py-2 mt-4">
               <FontAwesome name="lock" color="#420475" size={24} />
               <TextInput
                 placeholder="Mật khẩu"
@@ -210,7 +212,7 @@ function RegisterPage({ props }) {
           </View>
 
           <View className="flex justify-center items-center mt-5">
-            <TouchableOpacity className="bg-[#418dea] rounded-full w-3/4 py-4" onPress={() => handleSubmit()}>
+            <TouchableOpacity className="bg-[#0B6CA7] rounded-full w-3/4 py-4" onPress={() => handleSubmit()}>
               <Text className="text-white text-xl font-bold text-center">Đăng ký</Text>
             </TouchableOpacity>
             <View style={{ padding: 15 }}>
@@ -226,7 +228,7 @@ function RegisterPage({ props }) {
                 }}>
                 <AntDesign name="login" size={24} color="white" />
               </TouchableOpacity>
-              <Text className="text-[#418dea] font-bold text-sm mt-2">Đăng nhập</Text>
+              <Text className="text-[#0B6CA7] font-bold text-sm mt-2">Đăng nhập</Text>
             </View>
           </View>
           

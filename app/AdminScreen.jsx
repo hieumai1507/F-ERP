@@ -63,10 +63,7 @@ function AdminScreen({navigation}) {
 
 
   const renderLeaveRequestHeader = () => {
-    const totalRequests = leaveRequests.length;
     const today = dayjs();
-    const requestsToday = leaveRequests.filter(request => dayjs(request.date).isSame(today, 'day')).length;  // Get the count
-
     const statusCounts = leaveRequests.reduce((counts, request) => {
       counts[request.status] = (counts[request.status] || 0) + 1;
       return counts;
@@ -135,7 +132,7 @@ function AdminScreen({navigation}) {
     AsyncStorage.setItem('isLoggedIn', '');
     AsyncStorage.setItem('token', '');
     AsyncStorage.setItem('userType', '');
-    router.push("/Login/LoginScreen");
+    router.push("/auth/LoginScreen");
   }
 
   function deleteUser(data) {
@@ -341,7 +338,7 @@ const renderLeaveRequest = ({ item }) => {
         mode="contained"
         onPress={() => signOut()}
         style={{
-          backgroundColor: '#0163d2',
+          backgroundColor: '#0B6CA7',
           width: '100%',
           borderRadius: 0,
           margin: 0,

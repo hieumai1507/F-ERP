@@ -8,17 +8,20 @@ import {
   StyleSheet,
   Dimensions,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import {Avatar} from 'react-native-paper';
 import Back from 'react-native-vector-icons/Ionicons';
-import {RadioButton} from 'react-native-paper';
 import axios from 'axios';
 import {useRoute} from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
+import * as FileSystem from 'expo-file-system';
+
 const height = Dimensions.get('window').height * 1;
 function UpdateProfile() {
   const [image, setImage] = useState('');
@@ -29,40 +32,59 @@ function UpdateProfile() {
   const [mobile, setMobile] = useState('');
   const route = useRoute();
   const navigation = useNavigation();
+  const [permissionStatus, setPermissionStatus] = useState(null);
   // Function to select photo
-  const selectPhoto = async () => {
-    // Request permission to access camera roll (if needed)
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Permission to access gallery is required!');
-      return;
-    }
-
-    // Open the image picker
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1], // You can set aspect ratio to crop image
-      quality: 1, // Image quality
-    });
-
-    if (!result.canceled) {
-      setImage(result.uri);
-    }
-  };
+  
 
  
   useEffect(() => {
-    if (route.params?.data) { // Check if data exists
-    const userData = route.params.data;
-    setEmail(userData.email);
-    setGender(userData.gender);
-    setImage(userData.image);
-    setDepartment(userData.department);
-    setName(userData.name);
-    setMobile(userData.mobile);
-  }
+    (async () => {
+      // check and request permission for both camera roll in one go
+      const { status: cameraRollStatus } = await 
+      ImagePicker.requestMediaLibraryPermissionsAsync();
+      setPermissionStatus(cameraRollStatus);
+    
+      if (route.params?.data) { // Check if data exists
+        const userData = route.params.data;
+        setEmail(userData.email);
+        setGender(userData.gender);
+        setImage(userData.image);
+        setDepartment(userData.department);
+        setName(userData.name);
+        setMobile(userData.mobile);
+      }
+    })();
   },[route.params?.data]);
+
+  //function select Photo
+  const selectPhoto = async () => {
+    if(permissionStatus !== "granted") {
+      Alert.alert("Permission Required", "This app needs access to your gallery. Please go to settings to grant access");
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if(status !== 'granted') {
+        return;
+      } else {
+        setPermissionStatus(status);
+      }
+    }
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Image,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+      if(!result.canceled) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.warn("Error picking image:", error);
+      Alert.alert('Error', "There was an error selecting your image.")
+    }
+  }
+
+  //function updateProfile
   const updateProfile = async () => { 
     const formData = new FormData();
     formData.append('name', name);
@@ -156,7 +178,7 @@ function UpdateProfile() {
           </View>
           <View style={styles.camDiv}>
             <View style={styles.camIconDiv}>
-              <Back name="camera" size={22} style={styles.cameraIcon} onPress={() => route.back()} />
+              <Back name="camera" size={22} style={styles.cameraIcon} onPress={() => router.back()} />
             </View>
 
             <TouchableOpacity onPress={() => selectPhoto()}>
@@ -165,9 +187,8 @@ function UpdateProfile() {
                 style={styles.avatar}
                 source={{
                   uri:
-                  image==""|| image==null
-                      ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQMAAADCCAMAAAB6zFdcAAAAM1BMVEXFzeD////Byt7L0uPByd7Q1+b7/P3j5/Dv8fbe4+3r7vTFzuDL0+P19/rn6/LZ3urW2+lU+LHUAAAFLklEQVR4nO2dC3arMAxEQXwCcfjsf7XPkLw2tEka5AEziu8CeuKpJVmyLLIskUgkEkdFbsT+HXEQKbNqOPWN59y72D9nd/z/vWqbOv/mozSY9n116vIl1acYg1++G9v+5/rzvMs+QwL/7x/O9a/lT5zL2D9uF7wAzcP1e+pP2AQi4/mZAJ6TfQ3EtY9N4D+jdQ2k6F8K4OltayDFKyP4cghmI6PzVvDnHrDuEqR9UwFPY1IEufw+C72yh8LeIUFOaxSY6K0dFt2qTXDDVJCUi0IBT2vHHmTUSWAnPjgZtBJ4p2BjJ4RIYCSHlCpEAi+CAXMowiSwIIJoguKSE7k5rD8aPWDg3gnKg8EPLrGXEUL5tGC2ijr2OkIIjAlfEJdVBLMNcmprQEnAW09YUzT5C9aNADgbfMGaPQlOgrwj1cAlDZIGGVYD2ktIpAasiRNQgzxpkOektoCMjUkDT+zFaEFqwNqohtSgiL0YHcHlVAMaoCooM6SJo/qK7RGk+yBpkGVBl2w2NAi7aEwamNEAWE5MGiQNkgZJg6RB0sCEBoj+C3YN0j5IGkyks3LKnSegdaSkQdIgaUCtwcf7RJHy02OjVG3/+knvSlxJd+uK7Emb6eqOrQVBoJvgCtu16xYasF23QXsPWDVI+yArN9CALTyW6LhAqAE8NuaEcQH2fOMbtkNS+e7IC8MaYIuJM3TnRGwxcYbvPQ+0eDBD95TFIRv3rwyx17Qa/EGRbmqSAz1xvSP2ktaDvW3MOV9xoJ0i43tftEPgc4n4U1Ls9ajAbgTOkSCh02AW1GxJ4w2gCKwSIAspF0pLmIB5BNaXvhnwnMSXMn6DqrBzBoUrqKoiXdp8B6qqWMVeSADyzijhNyDeBiinyOwSUc95uAemYZ66sl0wLYGcFPmK6gsgCTRzZJxAlJe5TQFyQiA3hQxRVuSOChPBXrEW2trBf/RDts1sg+C8iXZA1oKwc9IY++dDCDojUKcKd5T67JF6ou4C9SHBhjO4os2hiWupv1Hm0JY00LpFKx5xQmsLpjRQdisy19R/om3MsaSB9rxsSgOdBKY00E5SZOxBeoa2kGJJA+01gyEN1JmjJQ20jxnYq+p3qPNGQxqo66qtHQ3UfUlJA0MalKJ+8NnyPfh/hFzOnbpFr6vP7JeNGaALw0BJMfzemT4+IhqSYq8hFESDInNj3ky4BPSXroieLPZDAuI7nuROsUS84iAvqKmT5gWxVxEIQgJuY8BsA+6NgPmyMXVkQHXuM+cMuBEIjO98Z4K78r5pOFtVpWiRn7Qd+aop5QU9AqJuMyYVRKoNJkT58OD/cuy1vYUX4LTBvLgrzVAcXwYpthPgSjcc2ybkgjoRvKQvjqrCVl7gEU11RJMQGTeYFvicbjyaCnsrMFG3R1JBsnZjR/hEhf4gJiHi0NOg1nCOL8OejvAJ3RBTBScy7O4GHlCfXCwV4hrBkvMlQmYpZXQjWLJ7sJTyEEawZNfMsowUC/+m38kxiNtgbDCMZgfHIMUuaVEA3cYnBnx5aAu8e9xMASkYFJjoNpo/K+7oVnBPg68xuKw8zoHoPXp0pCzHg0bDV0CTa3EsjmBJjUunsB9u35Ua08wkGecmuIEIEVIReoIFwTf38JHhEQgcxuqOlx4qCBFBCnY7uKH/uhV0SHRU9CNFUO1EB0A9TMKIIczoggP+QxpRUQ0cM+MMrmiezG7x0bmoKDYCZhLqgVjf8WvhfLhkfaPnFt/di8zq6XNbfIczMqsHDW3xTdrYPFvrP7kiUsVMV4ODAAAAAElFTkSuQmCC'
-                      : image,
+                  image ? image :
+                       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQMAAADCCAMAAAB6zFdcAAAAM1BMVEXFzeD////Byt7L0uPByd7Q1+b7/P3j5/Dv8fbe4+3r7vTFzuDL0+P19/rn6/LZ3urW2+lU+LHUAAAFLklEQVR4nO2dC3arMAxEQXwCcfjsf7XPkLw2tEka5AEziu8CeuKpJVmyLLIskUgkEkdFbsT+HXEQKbNqOPWN59y72D9nd/z/vWqbOv/mozSY9n116vIl1acYg1++G9v+5/rzvMs+QwL/7x/O9a/lT5zL2D9uF7wAzcP1e+pP2AQi4/mZAJ6TfQ3EtY9N4D+jdQ2k6F8K4OltayDFKyP4cghmI6PzVvDnHrDuEqR9UwFPY1IEufw+C72yh8LeIUFOaxSY6K0dFt2qTXDDVJCUi0IBT2vHHmTUSWAnPjgZtBJ4p2BjJ4RIYCSHlCpEAi+CAXMowiSwIIJoguKSE7k5rD8aPWDg3gnKg8EPLrGXEUL5tGC2ijr2OkIIjAlfEJdVBLMNcmprQEnAW09YUzT5C9aNADgbfMGaPQlOgrwj1cAlDZIGGVYD2ktIpAasiRNQgzxpkOektoCMjUkDT+zFaEFqwNqohtSgiL0YHcHlVAMaoCooM6SJo/qK7RGk+yBpkGVBl2w2NAi7aEwamNEAWE5MGiQNkgZJg6RB0sCEBoj+C3YN0j5IGkyks3LKnSegdaSkQdIgaUCtwcf7RJHy02OjVG3/+knvSlxJd+uK7Emb6eqOrQVBoJvgCtu16xYasF23QXsPWDVI+yArN9CALTyW6LhAqAE8NuaEcQH2fOMbtkNS+e7IC8MaYIuJM3TnRGwxcYbvPQ+0eDBD95TFIRv3rwyx17Qa/EGRbmqSAz1xvSP2ktaDvW3MOV9xoJ0i43tftEPgc4n4U1Ls9ajAbgTOkSCh02AW1GxJ4w2gCKwSIAspF0pLmIB5BNaXvhnwnMSXMn6DqrBzBoUrqKoiXdp8B6qqWMVeSADyzijhNyDeBiinyOwSUc95uAemYZ66sl0wLYGcFPmK6gsgCTRzZJxAlJe5TQFyQiA3hQxRVuSOChPBXrEW2trBf/RDts1sg+C8iXZA1oKwc9IY++dDCDojUKcKd5T67JF6ou4C9SHBhjO4os2hiWupv1Hm0JY00LpFKx5xQmsLpjRQdisy19R/om3MsaSB9rxsSgOdBKY00E5SZOxBeoa2kGJJA+01gyEN1JmjJQ20jxnYq+p3qPNGQxqo66qtHQ3UfUlJA0MalKJ+8NnyPfh/hFzOnbpFr6vP7JeNGaALw0BJMfzemT4+IhqSYq8hFESDInNj3ky4BPSXroieLPZDAuI7nuROsUS84iAvqKmT5gWxVxEIQgJuY8BsA+6NgPmyMXVkQHXuM+cMuBEIjO98Z4K78r5pOFtVpWiRn7Qd+aop5QU9AqJuMyYVRKoNJkT58OD/cuy1vYUX4LTBvLgrzVAcXwYpthPgSjcc2ybkgjoRvKQvjqrCVl7gEU11RJMQGTeYFvicbjyaCnsrMFG3R1JBsnZjR/hEhf4gJiHi0NOg1nCOL8OejvAJ3RBTBScy7O4GHlCfXCwV4hrBkvMlQmYpZXQjWLJ7sJTyEEawZNfMsowUC/+m38kxiNtgbDCMZgfHIMUuaVEA3cYnBnx5aAu8e9xMASkYFJjoNpo/K+7oVnBPg68xuKw8zoHoPXp0pCzHg0bDV0CTa3EsjmBJjUunsB9u35Ua08wkGecmuIEIEVIReoIFwTf38JHhEQgcxuqOlx4qCBFBCnY7uKH/uhV0SHRU9CNFUO1EB0A9TMKIIczoggP+QxpRUQ0cM+MMrmiezG7x0bmoKDYCZhLqgVjf8WvhfLhkfaPnFt/di8zq6XNbfIczMqsHDW3xTdrYPFvrP7kiUsVMV4ODAAAAAElFTkSuQmCC'
                 }}
               />
             </TouchableOpacity>
@@ -184,7 +205,7 @@ function UpdateProfile() {
                 placeholder="Your Name"
                 placeholderTextColor={'#999797'}
                 style={styles.infoEditSecond_text}
-                onChange={setName}
+                onChangeText={setName}
                 value={name}
               />
             </View>
@@ -196,7 +217,7 @@ function UpdateProfile() {
                 placeholder="Your Email"
                 placeholderTextColor={'#999797'}
                 style={styles.infoEditSecond_text}
-                onChange={e => setEmail(e.nativeEvent.text)}
+                onChangeText={setEmail}
                 defaultValue={email}
               />
             </View>
@@ -227,7 +248,7 @@ function UpdateProfile() {
                 keyboardType="default"
                 maxLength={10}
                 style={styles.infoEditSecond_text}
-                onChange={e => setDepartment(e.nativeEvent.text)}
+                onChangeText={setDepartment}
                 defaultValue={department}
               />
             </View>
@@ -240,7 +261,7 @@ function UpdateProfile() {
                 keyboardType="numeric"
                 maxLength={10}
                 style={styles.infoEditSecond_text}
-                onChange={e => setMobile(e.nativeEvent.text)}
+                onChangeText={setMobile}
                 defaultValue={mobile}
               />
             </View>
@@ -250,7 +271,7 @@ function UpdateProfile() {
               onPress={() => updateProfile()}
               style={styles.inBut}>
               <View>
-                <Text style={styles.textSign}>Update Profile</Text>
+                <Text style={styles.textSign}>Update</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -289,7 +310,7 @@ const styles = StyleSheet.create({
   },
   inBut: {
     width: '70%',
-    backgroundColor: '#0163D2',
+    backgroundColor: '#0B6CA7',
     alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 15,

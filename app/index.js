@@ -18,13 +18,13 @@ export default function App() {
       <View className="flex-row justify-around items-center absolute bottom-8 left-0 right-0">
         <TouchableOpacity
           className="bg-blue-600 py-3 px-5 rounded-full shadow" // Thay thế cho styles.button
-          onPress={() => router.push("/Login/LoginScreen")}
+          onPress={() => router.push("/auth/LoginScreen")}
         >
           <Text className="text-white text-3xl font-bold text-center">Đăng nhập</Text>
         </TouchableOpacity>
         <TouchableOpacity
           className="bg-blue-600 py-3 px-5 rounded-full shadow" // Thay thế cho styles.button
-          onPress={() => router.push("/Login/RegisterScreen")}
+          onPress={() => router.push("/auth/RegisterScreen")}
         >
           <Text className="text-white text-3xl font-bold text-center">Đăng ký</Text>
         </TouchableOpacity>

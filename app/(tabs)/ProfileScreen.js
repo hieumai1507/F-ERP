@@ -3,6 +3,7 @@ import { Text, View, TouchableOpacity } from "react-native";
 import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 const ProfileScreen = () => {
   const router = useRouter(); 
   const user = useSelector((state) => state.auth.user);
@@ -13,7 +14,7 @@ const ProfileScreen = () => {
     AsyncStorage.setItem('isLoggedIn', '');
     AsyncStorage.setItem('token', '');
     AsyncStorage.setItem('userType', '');
-    router.push("/Login/LoginScreen");
+    router.push("/auth/LoginScreen");
   }
 
   return (
@@ -24,7 +25,7 @@ const ProfileScreen = () => {
           <>
             <Text className="text-lg mb-4">Phone Number: {user.mobile}</Text>
             <Text className="text-lg mb-4">Email: {user.email}</Text>
-            <Text className="text-lg mb-4">Name: {user.Name}</Text>
+            <Text className="text-lg mb-4">Name: {user.name}</Text>
             <Text className="text-lg mb-4">Department: {user.department}</Text>
             <TouchableOpacity
               className="h-12 bg-purple-600 justify-center items-center rounded-lg px-5 mt-4"
@@ -40,5 +41,6 @@ const ProfileScreen = () => {
     </ProtectedRoute>
   )
 }
+
 
 export default ProfileScreen

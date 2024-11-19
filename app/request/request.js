@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Platform, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
-import {useNavigation} from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import moment from 'moment'; // Import moment.js for date/time formatting
-
+import { useSelector } from 'react-redux'; // Import useSelector
+import CustomPicker from "@/components/CustomPicker"
 
 const Request = () => {
   const [selectedStatus, setSelectedStatus] = useState('All');
@@ -20,6 +18,8 @@ const Request = () => {
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
   const [leaveRequests, setLeaveRequests] = useState([]);
+  const userEmail = useSelector(state => state.auth.user?.email); // Get email from Redux
+
   useEffect(() => {
     // Set your department list here
     setDepartments([
@@ -30,31 +30,28 @@ const Request = () => {
 
     const fetchLeaveRequests = async () => {
       try {
-        const token = await AsyncStorage.getItem('token');
-        if(!token) {
-          console.error("Token not found");
+        if (!userEmail) { // Check if userEmail exists
+          console.error("User email not found in Redux store");
           return;
         }
-        const response = await axios.get('http://192.168.50.53:5001/get-leave-requests', {
-          params: { token } //sending token as a query parameter
+        const response = await axios.get('http://192.168.50.53:5001/get-leave-requests-by-email', { // New route
+          params: { email: userEmail }, // Send email as query parameter
         });
+
         if (response.data.status === 'ok') {
           setLeaveRequests(response.data.data);
         } else {
-          // log the error and display a more user-friendly message
-          console.error('Error fetching leave requests:', response.data.data);
-          alert('Failed to load leave reaquests');
+          // ... error handling
         }
       } catch (error) {
-        console.error("Error fetching leave requests:", error);
-        alert("Failed to load leave requests");
+        // ... error handling
       } finally {
         setLoading(false);
       }
     };
 
     fetchLeaveRequests();
-  }, []);
+  }, [userEmail]); // Add userEmail to the dependency array
 
   
 
@@ -104,7 +101,7 @@ const Request = () => {
 }
 
   if (loading) {
-    return <Text>Loading departments...</Text>;
+    return <Text>Loading app...</Text>;
   }
 
   const filteredLeaveRequests = leaveRequests.filter(req => {
@@ -123,7 +120,7 @@ const Request = () => {
           <TouchableOpacity onPress={() => router.back()} className="mr-4">
         <Ionicons name="chevron-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-2xl font-bold mx-4 text-white">Xin phép</Text>
+        <Text className="flex-1 text-center text-[16px] font-bold mx-4 text-white">Xin phép</Text>
       </View>
         <View className="flex-1 bg-gray-100 p-4">
                         
@@ -132,7 +129,7 @@ const Request = () => {
                 <TouchableOpacity
                   key={status}
                   onPress={() => setSelectedStatus(status)}
-                  className={`px-4 py-2 rounded-lg border border-gray-300 mr-2 mb-2 ${selectedStatus === status ? 'bg-blue-500' : ''}`}
+                  className={`px-4 py-2 rounded-lg border border-gray-300 mr-2 mb-2 ${selectedStatus === status ? 'bg-[#0B6CA7]' : ''}`}
                 >
                   <Text className={`${selectedStatus === status ? 'text-white' : 'text-gray-700'}`}>
                     {status} ({getStatusCount(status)})
@@ -143,48 +140,48 @@ const Request = () => {
 
             <View className="flex-row justify-between mb-4">
               <View className="flex-1 mr-2">
-                <Picker
+                <CustomPicker
+                  items={departments}
                   selectedValue={selectedDepartment}
-                  onValueChange={(itemValue) => setSelectedDepartment(itemValue)}
-                  style={{ backgroundColor: 'white', borderColor: 'gray', borderRadius: 8, paddingHorizontal: 10 }}
-                >
-                  <Picker.Item label="Select Department" value={null} />
-                  {departments.map(dept => (
-                    <Picker.Item key={dept} label={dept} value={dept} />
-                  ))}
-            </Picker>
+                  onValueChange={setSelectedDepartment}
+                  placeholder="Select Department"
+                />
               </View>
 
               <View className="flex-1 flex-row items-center justify-between">
-                <TouchableOpacity onPress={() => setShowFromPicker(true)} className="bg-white border border-gray-300 rounded-lg px-2 py-1">
-                  <Text>{fromDate.toLocaleDateString()}</Text>
-                </TouchableOpacity>
-                {showFromPicker && (
-                  <DateTimePicker
-                    value={fromDate}
-                    mode="date"
-                    display="default"
-                    onChange={(event, selectedDate) => {
-                      setShowFromPicker(false);
-                      if (selectedDate) setFromDate(selectedDate);
-                    }}
-                  />
-                )}
+                <View>
+                  <TouchableOpacity onPress={() => setShowFromPicker(true)} className="bg-white border border-gray-300 rounded-lg px-2 py-1">
+                    <Text>{fromDate.toLocaleDateString()}</Text>
+                  </TouchableOpacity>
+                    {showFromPicker && (
+                      <DateTimePicker
+                        value={fromDate}
+                        mode="date"
+                        display="default"
+                        onChange={(event, selectedDate) => {
+                          setShowFromPicker(false);
+                          if (selectedDate) setFromDate(selectedDate);
+                        }}
+                    />
+                  )}
+                </View>
                 <Text className="mx-2">-</Text>
-                <TouchableOpacity onPress={() => setShowToPicker(true)} className="bg-white border border-gray-300 rounded-lg px-2 py-1">
-                  <Text>{toDate.toLocaleDateString()}</Text>
-                </TouchableOpacity>
-                {showToPicker && (
-                  <DateTimePicker
-                    value={toDate}
-                    mode="date"
-                    display="default"
-                    onChange={(event, selectedDate) => {
-                      setShowToPicker(false);
-                      if (selectedDate) setToDate(selectedDate);
-                    }}
-                  />
-                )}
+                <View>
+                  <TouchableOpacity onPress={() => setShowToPicker(true)} className="bg-white border border-gray-300 rounded-lg px-2 py-1">
+                    <Text>{toDate.toLocaleDateString()}</Text>
+                  </TouchableOpacity>
+                    {showToPicker && (
+                      <DateTimePicker
+                        value={toDate}
+                        mode="date"
+                        display="default"
+                        onChange={(event, selectedDate) => {
+                          setShowToPicker(false);
+                          if (selectedDate) setToDate(selectedDate);
+                        }}
+                    />
+                  )}
+                </View>
               </View>
             </View>
 
@@ -196,7 +193,7 @@ const Request = () => {
               />
 
             <TouchableOpacity
-              className="bg-blue-500 rounded-full p-3 absolute bottom-4 right-4 flex-row items-center"
+              className="bg-[#0B6CA7] rounded-full p-3 absolute bottom-4 right-4 flex-row items-center"
               onPress={() => {router.push("/request/createRequest")}}
             >
                 <Ionicons name="add-circle" size={24} color="white" />

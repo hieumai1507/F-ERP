@@ -15,7 +15,7 @@ const PersonalScreen = () => {
     AsyncStorage.setItem('isLoggedIn', '');
     AsyncStorage.setItem('token', '');
     AsyncStorage.setItem('userType', '');
-    router.push("/Login/LoginScreen");
+    router.push("/auth/LoginScreen");
   }
 
   return (

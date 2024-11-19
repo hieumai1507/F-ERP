@@ -12,8 +12,8 @@ function AppWrapper() {
   return (
     <Stack>
       <Stack.Screen name="index"  options={{ headerShown: false }} />
-      <Stack.Screen name="Login/LoginScreen"  options={{ headerShown: false }} />
-      <Stack.Screen name="Login/RegisterScreen" options={{ headerShown: false}} />
+      <Stack.Screen name="auth/LoginScreen"  options={{ headerShown: false }} />
+      <Stack.Screen name="auth/RegisterScreen" options={{ headerShown: false}} />
       <Stack.Screen name="AdminScreen" options={{ headerShown: false }} />
     </Stack>
   );

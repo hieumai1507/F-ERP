@@ -13,7 +13,7 @@ const ProtectedRoute = ({ children }) => {
       try {
         const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
         if (!isLoggedIn) { //only redirect if 'isLoggedIn' is not true
-          router.push("/Login/LoginScreen");
+          router.push("/auth/LoginScreen");
         }
       } catch (error) {
         console.error("Error checking auth status:", error);
