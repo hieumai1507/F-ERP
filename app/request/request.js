@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Platform, ScrollView, KeyboardAvoidingView } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Platform, 
+  ScrollView, KeyboardAvoidingView, RefreshControl,  
+  Alert} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
@@ -7,6 +9,8 @@ import axios from 'axios';
 import moment from 'moment'; // Import moment.js for date/time formatting
 import { useSelector } from 'react-redux'; // Import useSelector
 import CustomPicker from "@/components/CustomPicker"
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const Request = () => {
   const [selectedStatus, setSelectedStatus] = useState('All');
@@ -18,6 +22,7 @@ const Request = () => {
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
   const [leaveRequests, setLeaveRequests] = useState([]);
+  const [refreshing, setRefreshing] = useState(false); // Add refreshing state
   const userEmail = useSelector(state => state.auth.user?.email); // Get email from Redux
 
   useEffect(() => {
@@ -28,32 +33,56 @@ const Request = () => {
       'PKD9', 'PKD10', 'PKD11', 'PKD12', 'PKD13', 'PKD14', 'PKD15', 'Printsel','Resource','Technical','Varlders'
     ]);
 
-    const fetchLeaveRequests = async () => {
-      try {
-        if (!userEmail) { // Check if userEmail exists
-          console.error("User email not found in Redux store");
-          return;
-        }
-        const response = await axios.get('http://192.168.50.53:5001/get-leave-requests-by-email', { // New route
-          params: { email: userEmail }, // Send email as query parameter
-        });
-
-        if (response.data.status === 'ok') {
-          setLeaveRequests(response.data.data);
-        } else {
-          // ... error handling
-        }
-      } catch (error) {
-        // ... error handling
-      } finally {
-        setLoading(false);
-      }
-    };
+    
 
     fetchLeaveRequests();
   }, [userEmail]); // Add userEmail to the dependency array
+  const fetchLeaveRequests = async () => {
+    setLoading(true); // Set loading to true before fetching
+    setRefreshing(true)
+    try {
+      if (!userEmail) { // Check if userEmail exists
+        console.error("User email not found in Redux store");
+        return;
+      }
+      const token = await AsyncStorage.getItem('token'); // Get token from AsyncStorage
 
-  
+      if (!token) {
+          console.error("Token not found in AsyncStorage");
+          return;
+      }
+      const response = await axios.get('http://192.168.50.53:5001/get-leave-requests-by-email', { // New route
+        params: { token: token }, // Send email as query parameter
+        headers: {
+          Authorization: `Bearer ${token}`, // Add Bearer prefix
+        },
+      });
+
+      if (response.status === 200 && response.data.status === 'ok') {
+        setLeaveRequests(response.data.data);
+      } else if(response.status === 401) {
+        // ... error handling
+        console.error("Unauthorized: Token is invalid");
+        Alert.alert("Session Expired", "Please log in again");
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('isLoggedIn');
+        router.push('/auth/LoginScreen');
+      } else {
+        console.error("Error fetching leave requests", response.data);
+        Alert.alert("Error", "Could not fetch leave requests."); // General error
+      }
+    } catch (error) {
+      // ... error handling
+      console.error("Error fetching leave requests", error);
+      Alert.alert("Network Error", "Could not connect to the server"); //network error
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+  const onRefresh = () => {
+    fetchLeaveRequests();
+  }
 
   const getStatusCount = (status) => {
     if (status === 'All') {
@@ -116,12 +145,7 @@ const Request = () => {
       className="flex-1 bg-white"
       keyboardVerticalOffset={100} // Adjust as needed
     >
-      <View className="flex-row items-center mb-8 py-4 bg-blue-500">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-        <Ionicons name="chevron-back" size={24} color="white" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-center text-[16px] font-bold mx-4 text-white">Xin phép</Text>
-      </View>
+      
         <View className="flex-1 bg-gray-100 p-4">
                         
             <View className="flex-row flex-wrap justify-between mb-4">
@@ -190,6 +214,12 @@ const Request = () => {
                 data={filteredLeaveRequests}
                 renderItem={renderLeaveRequest}
                 keyExtractor={(item) => item._id} // Use _id from database as key
+                refreshControl={
+                  <RefreshControl 
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                  />
+                }
               />
 
             <TouchableOpacity

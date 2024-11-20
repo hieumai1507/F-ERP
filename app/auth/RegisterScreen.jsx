@@ -96,11 +96,11 @@ function RegisterPage({ props }) {
             <Text className="text-3xl font-bold text-black text-center">F-ERP chào mừng bạn!</Text>
 
             <View className="flex flex-row justify-between items-center my-5">
-              <Text className="text-xl text-black font-bold">Login as</Text>
+              <Text className="text-xl text-[#0B6CA7] font-bold">Login as</Text>
               <View className="flex flex-row justify-center items-center">
               <TouchableOpacity
                   onPress={() => setUserType('User')}
-                  className={`flex flex-row items-center px-4 py-2 rounded-full ${userType === 'User' ? 'bg-blue-500' : 'bg-gray-200'}`}
+                  className={`flex flex-row items-center px-4 py-2 rounded-full ${userType === 'User' ? 'bg-[#0B6CA7]' : 'bg-gray-200'}`}
                 >
                   <RadioButton
                     value="User"
@@ -114,7 +114,7 @@ function RegisterPage({ props }) {
               <View className="flex flex-row justify-center items-center">
               <TouchableOpacity
                 onPress={() => setUserType('Admin')}
-                className={`flex flex-row items-center px-4 py-2 rounded-full ${userType === 'Admin' ? 'bg-blue-500' : 'bg-gray-200'}`}
+                className={`flex flex-row items-center px-4 py-2 rounded-full ${userType === 'Admin' ? 'bg-[#0B6CA7]' : 'bg-gray-200'}`}
               >
                 <RadioButton
                   value="Admin"
@@ -155,7 +155,7 @@ function RegisterPage({ props }) {
               <Text className="ml-5 text-red-500">Name should be more than 1 character.</Text>
             )}
 
-            <View className="flex flex-row items-center border border-[#420475] rounded-full px-3 py-2 mt-4">
+            <View className="flex flex-row items-center border border-[#0B6CA7] rounded-full px-3 py-2 mt-4">
               <Fontisto name="email" color="#420475" size={24} />
               <TextInput
                 placeholder="Email"
@@ -172,7 +172,7 @@ function RegisterPage({ props }) {
               <Text className="ml-5 text-red-500">Enter a valid email address</Text>
             )}
 
-            <View className="flex flex-row items-center border border-[#420475] rounded-full px-3 py-2 mt-4">
+            <View className="flex flex-row items-center border border-[#0B6CA7] rounded-full px-3 py-2 mt-4">
               <FontAwesome name="mobile" color="#420475" size={35} />
               <TextInput
                 placeholder="Số điện thoại"
@@ -222,7 +222,7 @@ function RegisterPage({ props }) {
             </View>
             <View className="items-center justify-center">
               <TouchableOpacity
-                className="bg-[#418dea] p-3 rounded-full"
+                className="bg-[#0B6CA7] p-3 rounded-full"
                 onPress={() => {
                   router.push('./LoginScreen')
                 }}>

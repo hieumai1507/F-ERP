@@ -11,8 +11,8 @@ import {
   Platform,
   Alert
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useSelector } from "react-redux";
 import {Avatar} from 'react-native-paper';
 import Back from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
@@ -21,6 +21,7 @@ import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
+
 
 const height = Dimensions.get('window').height * 1;
 function UpdateProfile() {
@@ -33,11 +34,18 @@ function UpdateProfile() {
   const route = useRoute();
   const navigation = useNavigation();
   const [permissionStatus, setPermissionStatus] = useState(null);
-  // Function to select photo
-  
+  const [imageBase64, setImageBase64] = useState(''); // Trạng thái mới lưu ảnh dạng base64
 
+  // Function to select photo
+
+  const user = useSelector((state) => state.auth.user);
+  const userEmail = user.email; // Get email directly from Redux
+  useEffect(() => {
+    console.log("User updated:", user);
+  }, [route.params?.data, user]);
  
   useEffect(() => {
+    
     (async () => {
       // check and request permission for both camera roll in one go
       const { status: cameraRollStatus } = await 
@@ -76,19 +84,40 @@ function UpdateProfile() {
         quality: 1,
       });
       if(!result.canceled) {
-        setImage(result.assets[0].uri);
+        const asset = result.assets[0];
+        // chuyển đổi ảnh sang base64
+        const base64Img = await convertImageToBase64(asset.uri);
+        setImageBase64(base64Img);
+        setImage(asset.uri);
       }
     } catch (error) {
       console.warn("Error picking image:", error);
       Alert.alert('Error', "There was an error selecting your image.")
     }
+  };
+
+  const convertImageToBase64 = async (uri) => {
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }catch (error) {
+      console.error("Lỗi chuyển đổi ảnh sang base64", error);
+      Alert.alert("Error", "Could not convert image");
+      return null;
+    }
   }
+
 
   //function updateProfile
   const updateProfile = async () => { 
     const formData = new FormData();
     formData.append('name', name);
-    formData.append('email', email);
     formData.append('mobile', mobile);
     formData.append('gender', gender);
     formData.append('department', department);
@@ -105,23 +134,38 @@ function UpdateProfile() {
                 type: `image/${fileType}`,
              });
           } else {
-              throw new Error("File does not exist in local file system")
+            Alert.alert('Error', "Could not found image file.");
+              return;
           }
       } catch (error) {
-          console.log(error.message);
+          console.error("File system error",error);
+          Alert.alert('Error', "Error accessing image file");
       }
     }
 
     try {
-      const res = await axios.post('http://192.168.50.53:5001/update-user', formData, { // Use correct IP if different
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const res = await axios.post('http://192.168.50.53:5001/update-user', { // Use correct IP if different
+        name,
+        mobile,
+        gender,
+        department,
+        image: imageBase64, // Send base64 image data
+        email: userEmail,
       });
 
       if (res.data.status === "Ok") {
         Toast.show({ type: 'success', text1: 'Updated' });
-        navigation.goBack();
+        //
+        setTimeout(() => {
+          Alert.alert(
+            "Thành công!",
+            "Cập nhật hồ sơ thành công!",
+            [
+              { text: "OK", onPress: () => navigation.goBack() },
+            ]
+          );
+        }, 1000); //
+        
       } else {
         // Handle errors and display specific error messages
         Toast.show({
@@ -130,6 +174,7 @@ function UpdateProfile() {
           text2: res.data.data || 'Something went wrong',
         });
         console.error("Server Error:", res.data.data || 'Something went wrong');
+        Alert.alert("Update Failed", res.data.data || 'Something went wrong'); // hiển thị cảnh báo
       }
     } catch (error) {
       // Handle network or other errors
@@ -142,7 +187,7 @@ function UpdateProfile() {
 
         if (error.response) {
           console.error("Server responded with:", error.response.data); // Log detailed server error
-          Alert.alert('Update Failed', error.response.data || 'Server error');
+          Alert.alert('Update Failed', error.response.data.data || 'Server error');
       } else if (error.request) {
           console.error("No response from server:", error.request); // Log the request
           Alert.alert('Update Failed', 'No response from server');
@@ -165,17 +210,6 @@ function UpdateProfile() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{paddingBottom: 40}}>
         <View>
-          <View style={styles.header}>
-            <View style={{flex: 1}}>
-            <TouchableOpacity onPress={() => navigation.goBack()} className="mr-2">
-              <Ionicons name="chevron-back" size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-            <View style={{flex: 3}}>
-              <Text style={styles.nameText}>Edit Profile</Text>
-            </View>
-            <View style={{flex: 1}}></View>
-          </View>
           <View style={styles.camDiv}>
             <View style={styles.camIconDiv}>
               <Back name="camera" size={22} style={styles.cameraIcon} onPress={() => router.back()} />
@@ -214,11 +248,9 @@ function UpdateProfile() {
               <Text style={styles.infoEditFirst_text}>Email</Text>
               <TextInput
                 editable={false}
-                placeholder="Your Email"
+                placeholder={user.email}
                 placeholderTextColor={'#999797'}
                 style={styles.infoEditSecond_text}
-                onChangeText={setEmail}
-                defaultValue={email}
               />
             </View>
 

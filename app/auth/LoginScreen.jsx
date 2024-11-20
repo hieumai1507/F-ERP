@@ -60,9 +60,9 @@ const LoginScreen = () => {
         dispatch(setUser(res.data.userData));
         dispatch(setUserType(res.data.userType));
         if (res.data.userType === "Admin") {
-          router.push('../AdminScreen');
+          router.push('/AdminScreen');
         } else {
-          router.push('../(tabs)/HomeScreen');
+          router.push('/(tabs)/HomeScreen');
         }
       }else {
         // wrong user 

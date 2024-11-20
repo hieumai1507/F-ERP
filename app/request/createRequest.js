@@ -116,107 +116,100 @@ export default function CreateRequestScreen() {
       className="flex-1 bg-white"
       keyboardVerticalOffset={100} // Adjust as needed
     >
-         <View className="flex-row items-center mb-8 py-4 bg-blue-500">
-            <TouchableOpacity onPress={() => navigation.goBack()} className="mr-2">
-              <Ionicons name="chevron-back" size={24} color="white" />
-            </TouchableOpacity>
-            <Text className="text-[16px] font-bold text-center flex-1 mx-4 text-white">Tạo đơn</Text>
-          </View>
-        <View className="flex-1 bg-white p-4">
-          
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between' }}>
-          <Text className="text-gray-500 mb-2">Vui lòng điền đầy đủ và cẩn thận</Text>
-          {/* //UI display input loại */}
-          <View className="mb-4">
-            <Text className="mb-1 font-bold">Loại</Text>
-            <CustomPicker
-              items={['Đi muộn', 'Về sớm', 'Xin nghỉ', 'Ra ngoài']}
-              selectedValue={loai}
-              onValueChange={(value) => setLoai(value)}
-              placeholder="Chọn loại"
-             />
-          </View>
-          {/* //UI loại = Ra ngoài */}
-          {loai === 'Ra ngoài' && (
-            <View className="mb-4 ">
-              <Text className="mb-1 font-bold">Thời gian vắng mặt</Text>
-              <CustomPicker
-                items={['60', '120']}
-                selectedValue={thoiGianVangMat}
-                onValueChange={(value) => setThoiGianVangMat(value)}
-                placeholder="Chọn thời gian"
-               />
-            </View>
-          )}
-          {/* //UI loại = Xin Nghỉ: Thời gian xin nghỉ */}
-          {loai === 'Xin nghỉ' && (
-          <View className="mb-4">
-            <Text className="mb-1 font-bold">Thời gian xin nghỉ</Text>
-            <CustomPicker 
-              items={["Buổi sáng", "Buổi chiều", "Cả ngày"]}
-              selectedValue={thoiGianXinNghi}
-              onValueChange={(value) => setThoiGianXinNghi(value)}
-              placeholder="Chọn giờ nghỉ"
-            />
-          </View>
-        )}
-        {/* //UI loại khác xin nghỉ : Thời gian */}
-        {loai !== 'Xin nghỉ' && (
-          <View className="mb-4">
-            <Text className="mb-1 font-bold">Thời gian</Text>
-            <TouchableOpacity onPress={() => setShowTimePicker(true)} className="border border-gray-300 rounded p-2">
-              <Text>{thoiGian.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-            </TouchableOpacity>
-
-            {showTimePicker && (
-              <DateTimePicker
-                value={thoiGian}
-                mode="time"
-                is24Hour={true}
-                display="default"
-                onChange={onChangeTime}
-              />
+        <View className="flex-1 bg-white p-4">  
+            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between' }}>
+              <Text className="text-gray-500 mb-2">Vui lòng điền đầy đủ và cẩn thận</Text>
+              {/* //UI display input loại */}
+              <View className="mb-4">
+                <Text className="mb-1 font-bold">Loại</Text>
+                <CustomPicker
+                  items={['Đi muộn', 'Về sớm', 'Xin nghỉ', 'Ra ngoài']}
+                  selectedValue={loai}
+                  onValueChange={(value) => setLoai(value)}
+                  placeholder="Chọn loại"
+                />
+              </View>
+              {/* //UI loại = Ra ngoài */}
+              {loai === 'Ra ngoài' && (
+                <View className="mb-4 ">
+                  <Text className="mb-1 font-bold">Thời gian vắng mặt</Text>
+                  <CustomPicker
+                    items={['60', '120']}
+                    selectedValue={thoiGianVangMat}
+                    onValueChange={(value) => setThoiGianVangMat(value)}
+                    placeholder="Chọn thời gian"
+                  />
+                </View>
+              )}
+              {/* //UI loại = Xin Nghỉ: Thời gian xin nghỉ */}
+              {loai === 'Xin nghỉ' && (
+              <View className="mb-4">
+                <Text className="mb-1 font-bold">Thời gian xin nghỉ</Text>
+                <CustomPicker 
+                  items={["Buổi sáng", "Buổi chiều", "Cả ngày"]}
+                  selectedValue={thoiGianXinNghi}
+                  onValueChange={(value) => setThoiGianXinNghi(value)}
+                  placeholder="Chọn giờ nghỉ"
+                />
+              </View>
             )}
-          </View>
-        )}
-          {/* UI ngày xin phép */}
-          <View className="mb-4">
-            <Text className="mb-1 font-bold">Ngày xin phép</Text>
-            <TouchableOpacity onPress={() => setShowDatePicker(true)} className="border border-gray-300 rounded p-2">
-              <Text>{ngayXinPhep.toLocaleDateString()}</Text>
-            </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={ngayXinPhep}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={onChangeDate}
-                minimumDate={new Date()} // Set minimum date to today
-              />
-            )}
-          </View>
-          {/* UI Lý do */}
-          <View className="mb-4">
-            <Text className="mb-1 font-bold">Lý do</Text>
-            <TextInput
-              multiline
-              placeholder="Type your message here"
-              value={lyDo}
-              onChangeText={setLyDo}
-              className="border border-gray-300 rounded p-2 h-24"
-            />
-          </View>
-            {/* UI người duyệt */}
-          <View className="mb-4">
-            <Text className="mb-1 font-bold">Người duyệt</Text>
-            <Text>Lỗ Quang Tính</Text>
-          </View>
-            {/* Button Submit */}
-          <TouchableOpacity onPress={handleSubmit} className="bg-[#0B6CA7] rounded-lg py-3">
-            <Text className="text-white text-center text-lg">Submit</Text>
-          </TouchableOpacity>
+            {/* //UI loại khác xin nghỉ : Thời gian */}
+            {loai !== 'Xin nghỉ' && (
+              <View className="mb-4">
+                <Text className="mb-1 font-bold">Thời gian</Text>
+                <TouchableOpacity onPress={() => setShowTimePicker(true)} className="border border-gray-300 rounded p-2">
+                  <Text>{thoiGian.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                </TouchableOpacity>
 
-      </ScrollView>
+                {showTimePicker && (
+                  <DateTimePicker
+                    value={thoiGian}
+                    mode="time"
+                    is24Hour={true}
+                    display="default"
+                    onChange={onChangeTime}
+                  />
+                )}
+              </View>
+            )}
+              {/* UI ngày xin phép */}
+              <View className="mb-4">
+                <Text className="mb-1 font-bold">Ngày xin phép</Text>
+                <TouchableOpacity onPress={() => setShowDatePicker(true)} className="border border-gray-300 rounded p-2">
+                  <Text>{ngayXinPhep.toLocaleDateString()}</Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={ngayXinPhep}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onChangeDate}
+                    minimumDate={new Date()} // Set minimum date to today
+                  />
+                )}
+              </View>
+              {/* UI Lý do */}
+              <View className="mb-4">
+                <Text className="mb-1 font-bold">Lý do</Text>
+                <TextInput
+                  multiline
+                  placeholder="Type your message here"
+                  value={lyDo}
+                  onChangeText={setLyDo}
+                  className="border border-gray-300 rounded p-2 h-24"
+                />
+              </View>
+                {/* UI người duyệt */}
+              <View className="mb-4">
+                <Text className="mb-1 font-bold">Người duyệt</Text>
+                <Text>Lỗ Quang Tính</Text>
+              </View>
+                {/* Button Submit */}
+              <TouchableOpacity onPress={handleSubmit} className="bg-[#0B6CA7] rounded-lg py-3">
+                <Text className="text-white text-center text-lg">Submit</Text>
+              </TouchableOpacity>
+
+          </ScrollView>
 
         </View>
 

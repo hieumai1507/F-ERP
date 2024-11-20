@@ -1,53 +1,43 @@
 import React from 'react';
-import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { Tabs } from "expo-router";
-
-
+import { AntDesign, Ionicons } from '@expo/vector-icons';
 function TabLayout() {
   return (
-    <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: "#005AB4" }}>
+    <Tabs
+      screenOptions={({ route }) => {
+        let IconComponent;
+        let iconName;
 
-      <Tabs.Screen 
-        name="HomeScreen" 
-        options={{
+        if (route.name === "HomeScreen") {
+          IconComponent = AntDesign;
+          iconName = "home";
+        } else if (route.name === "CalendarScreen") {
+          IconComponent = AntDesign;
+          iconName = "calendar";
+        } else if (route.name === "ProfileScreen") {
+          IconComponent = AntDesign;
+          iconName = "profile";
+        } else if (route.name === "PersonalScreen") {
+          IconComponent = Ionicons;
+          iconName = "person-outline";
+        }
+
+        return {
+          tabBarIcon: ({ color }) => (
+            <IconComponent name={iconName} size={24} color={color} />
+          ),
           headerShown: false,
-          tabBarLabel: "Trang chủ",
-          tabBarIcon: ({ color }) => (
-            <AntDesign name="home" size={24} color={color} /> // Sử dụng màu tab hiện tại
-          ),
-        }}
-      />
-      <Tabs.Screen 
-        name="CalendarScreen" 
-        options={{
-          headerShown: false,
-          tabBarLabel: "Lịch",
-          tabBarIcon: ({ color }) => (
-            <AntDesign name="calendar" size={24} color={color} /> // Sử dụng màu tab hiện tại
-          ),
-        }}
-      />
-      <Tabs.Screen 
-        name="ProfileScreen" 
-        options={{
-          headerShown: false,
-          tabBarLabel: "Hồ sơ",
-          tabBarIcon: ({ color }) => (
-            <AntDesign name="profile" size={24} color={color} /> // Sử dụng màu tab hiện tại
-          ),
-        }}
-      />
-      <Tabs.Screen 
-        name="PersonalScreen" 
-        options={{
-          headerShown: false, 
-          tabBarLabel: "Cá nhân",
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="person-outline" size={24} color={color} /> // Sử dụng màu tab hiện tại
-          ),
-        }}
-      />
+          tabBarShowLabel: false,
+          tabBarActiveTintColor: "#005AB4",
+        };
+      }}
+    >
+      <Tabs.Screen name="HomeScreen" />
+      <Tabs.Screen name="CalendarScreen" />
+      <Tabs.Screen name="ProfileScreen" />
+      <Tabs.Screen name="PersonalScreen" />
     </Tabs>
   );
-};
+}
+
 export default TabLayout;

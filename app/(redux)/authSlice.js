@@ -31,8 +31,12 @@ const authSlice = createSlice({
     },
     logoutAction: (state) => {
       state.user = null;
-      state.loading = false;
-      AsyncStorage.removeItem("userInfo");
+  state.userType = null; // Also clear userType
+  state.loading = false;
+  AsyncStorage.removeItem("userInfo");
+  AsyncStorage.removeItem("token");
+  AsyncStorage.removeItem("isLoggedIn");
+  AsyncStorage.removeItem("userType"); // Remove userType from AsyncStorage as well
     },
     setUser: (state, action) => {
       state.user = action.payload;

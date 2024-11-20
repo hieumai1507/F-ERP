@@ -75,7 +75,7 @@ function AdminScreen({navigation}) {
        
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statusFilterContainer}> {/* Keep ScrollView for filters */}
          <TouchableOpacity onPress={() => filterRequestsByStatus(null)} style={styles.statusFilterButton}>
-          <Text style={[styles.statusFilterText, !selectedStatus && styles.activeStatusFilterText]}>All</Text>
+          <Text style={[styles.statusFilterText, !selectedStatus && styles.activeStatusFilterText, {color:"blue"}]}>All</Text>
         </TouchableOpacity>
           {Object.keys(statusCounts).map(status => (
             <TouchableOpacity
@@ -247,7 +247,6 @@ const renderLeaveRequest = ({ item }) => {
   return (
   <View style={styles.card}>
   <View style={styles.cardDetails}>
-    <Text style={styles.requestInfo}>Request ID: {item._id || 'N/A'}</Text>
     {creatorInfo ? ( // Check if creatorInfo is available
       <>
         <Text style={styles.requestInfo}>Creator Name: {creatorInfo.name || 'N/A'}</Text>
@@ -263,7 +262,6 @@ const renderLeaveRequest = ({ item }) => {
     {item.date && (
            <Text style={styles.requestInfo}>Date: {new Date(item.date).toLocaleDateString()}</Text>
         )}
-
 
     <Text style={styles.requestInfo}>Reason: {item.reason || 'N/A'}</Text>
     {item.thoiGianVangMat && item.type == "Ra ngoài" && (
@@ -327,8 +325,8 @@ const renderLeaveRequest = ({ item }) => {
             <TabBar
               {...props}
               indicatorStyle={{ backgroundColor: 'blue' }} // Customize indicator
-              style={{ backgroundColor: '#40e0d0' }} // Customize tab bar background
-              labelStyle= {{ color: "#FFFFFF", fontWeight: 'bold' }} // Customize
+              style={{ backgroundColor: '#0B6CA7' }} // Customize tab bar background
+              labelStyle= {styles.labelStyles} // Customize
               activeLabelStyle={{ color:'FF6347'}}
             />
           )}
@@ -445,8 +443,6 @@ const styles = StyleSheet.create({
       marginTop: 10,
       marginBottom: 5,
       fontSize: 18,
-
-
     },
 
     pendingRequest: {
@@ -482,5 +478,10 @@ const styles = StyleSheet.create({
       color: 'white',
       fontWeight: 'bold',
     },
+    labelStyles: {
+      fontWeight: 'bold',
+      color: "#ffffff",
+      fontSize: 16,
+    }
 });
 export default AdminScreen;
