@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Platform, 
-  ScrollView, KeyboardAvoidingView, RefreshControl,  
-  Alert} from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Platform, KeyboardAvoidingView, RefreshControl,  
+  Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
@@ -10,7 +9,7 @@ import moment from 'moment'; // Import moment.js for date/time formatting
 import { useSelector } from 'react-redux'; // Import useSelector
 import CustomPicker from "@/components/CustomPicker"
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import * as Animatable from 'react-native-animatable';
 
 const Request = () => {
   const [selectedStatus, setSelectedStatus] = useState('All');
@@ -35,24 +34,25 @@ const Request = () => {
 
     
 
-    fetchLeaveRequests();
+    if (userEmail) { // Only fetch if userEmail exists
+      fetchLeaveRequests();
+    }
   }, [userEmail]); // Add userEmail to the dependency array
   const fetchLeaveRequests = async () => {
     setLoading(true); // Set loading to true before fetching
     setRefreshing(true)
     try {
-      if (!userEmail) { // Check if userEmail exists
-        console.error("User email not found in Redux store");
-        return;
-      }
+      
       const token = await AsyncStorage.getItem('token'); // Get token from AsyncStorage
 
       if (!token) {
-          console.error("Token not found in AsyncStorage");
+          console.error("Token not found in AsyncStorage, but continuing anyway");
+          setLoading(false); // Set loading to false if token not found
+          setRefreshing(false);
           return;
       }
       const response = await axios.get('http://192.168.50.53:5001/get-leave-requests-by-email', { // New route
-        params: { token: token }, // Send email as query parameter
+        params: { email: userEmail },
         headers: {
           Authorization: `Bearer ${token}`, // Add Bearer prefix
         },
@@ -60,21 +60,14 @@ const Request = () => {
 
       if (response.status === 200 && response.data.status === 'ok') {
         setLeaveRequests(response.data.data);
-      } else if(response.status === 401) {
-        // ... error handling
-        console.error("Unauthorized: Token is invalid");
-        Alert.alert("Session Expired", "Please log in again");
-        await AsyncStorage.removeItem('token');
-        await AsyncStorage.removeItem('isLoggedIn');
-        router.push('/auth/LoginScreen');
       } else {
         console.error("Error fetching leave requests", response.data);
-        Alert.alert("Error", "Could not fetch leave requests."); // General error
+        Alert.alert("Error", "Could not fetch leave requests. Please try again later.");
       }
     } catch (error) {
       // ... error handling
       console.error("Error fetching leave requests", error);
-      Alert.alert("Network Error", "Could not connect to the server"); //network error
+      Alert.alert("Error", error.message); //network error
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -129,9 +122,21 @@ const Request = () => {
   );
 }
 
-  if (loading) {
-    return <Text>Loading app...</Text>;
-  }
+if(loading) {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color="#0000ff" />
+      <Animatable.Text
+        animation="pulse"
+        easing="ease-out"
+        iterationCount="infinite"
+        style={{ marginTop: 10, fontSize: 16, color: '#555' }}
+      >
+        Loading...
+      </Animatable.Text>
+    </View>
+  );
+}
 
   const filteredLeaveRequests = leaveRequests.filter(req => {
     const requestDate = new Date(req.date.split('/').reverse().join('-'));

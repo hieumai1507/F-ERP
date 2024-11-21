@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react';
-import {Text, View, StyleSheet, Image, FlatList,Alert, Dimensions, ScrollView } from 'react-native';
+import {Text, View, StyleSheet, Image, FlatList, 
+  Alert, Dimensions, ScrollView, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import {Button} from 'react-native-paper';
@@ -8,7 +9,8 @@ import { router } from 'expo-router';
 import { TouchableOpacity } from 'react-native'; // Import TouchableOpacity
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view'; // Import TabView 
 import dayjs from 'dayjs';
-
+import PendingRequests from '../components/PendingRequests';
+import * as Animatable from 'react-native-animatable';
 function AdminScreen({navigation}) {
   const [userData, setUserData] = useState('');
   const [allUserData, setAllUserData] = useState('');
@@ -103,25 +105,16 @@ function AdminScreen({navigation}) {
         renderItem={renderLeaveRequest}
         ListHeaderComponent={() => (
           <View>
-            <Text>Total Leave Requests: {leaveRequests.length}</Text>
-            <Text>Total Leave Requests Today: {dayjs().format('MM-DD-YYYY')} : {' '}
+            <Text style={styles.boldText}>Total Leave Requests: {leaveRequests.length}</Text>
+            <Text style={styles.boldText}>Total Leave Requests Today: {dayjs().format('MM-DD-YYYY')} : {' '}
              {leaveRequests.filter(request => dayjs(request.date).isSame(dayjs(), 'day')).length}
              </Text>
-            <Text style={styles.pendingTitle}>Pending Requests:</Text>
-            {leaveRequests.filter(request => request.status === 'Pending').map(request => (
-              <TouchableOpacity 
-                key={request._id} 
-                style={styles.pendingRequest}
-                onPress={() => {
-                  setFilteredRequests(leaveRequests.filter(r => r._id === request._id));
-                }}
-              >
-                <Text>
-                  {request.reason ? request.reason : 'N/A'} -{' '}
-                  {dayjs(request.date).isValid() ? dayjs(request.date).format('MM-DD-YYYY') : 'Invalid Date'} ({request.userEmail ? request.userEmail : 'N/A'})
-                </Text>
-              </TouchableOpacity>
-            ))}
+             // danh sách các pending requests
+              <PendingRequests 
+                leaveRequests={leaveRequests}
+                setFilteredRequests={setFilteredRequests}
+              />
+              <Text>-------------------------------------------------</Text>
           </View>
         )}
       />
@@ -204,8 +197,21 @@ function AdminScreen({navigation}) {
 
     fetchData();
   }, []);
+  //loading animation starts
   if(loading) {
-    return <View><Text>Loading...</Text></View>;
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Animatable.Text
+          animation="pulse"
+          easing="ease-out"
+          iterationCount="infinite"
+          style={{ marginTop: 10, fontSize: 16, color: '#555' }}
+        >
+          Loading...
+        </Animatable.Text>
+      </View>
+    );
   }
 
 
@@ -482,6 +488,9 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
       color: "#ffffff",
       fontSize: 16,
-    }
+    },
+    boldText: {
+    fontWeight: 'bold',
+  },
 });
 export default AdminScreen;

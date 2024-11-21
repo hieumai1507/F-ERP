@@ -71,9 +71,9 @@ export default function CreateRequestScreen() {
       }
     }
     //condition loại = Ra Ngoài
-    let thoiGianVangMatToSend = 0; // giữ nguyên giá trị nếu type là "Ra Ngoài"
-    if(loai === "Ra Ngoài") {
-        thoiGianVangMat = thoiGianVangMatToSend;
+    let thoiGianVangMatToSend = null; // giữ nguyên giá trị nếu type là "Ra Ngoài"
+    if(loai === 'Ra ngoài') {
+      thoiGianVangMatToSend = parseInt(thoiGianVangMat, 10);
     }
     //condition loại = Xin nghỉ
     let timeToSend = thoiGian;
