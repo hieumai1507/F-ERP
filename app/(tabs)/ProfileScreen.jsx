@@ -5,20 +5,18 @@ import { useRouter } from "expo-router";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 const ProfileScreen = () => {
-  const router = useRouter(); 
+  const router = useRouter();
   const user = useSelector((state) => state.auth.user);
-  useEffect(() => {
-    console.log("User updated:", user);
-  }, [user]);
+
   function signOut() {
-    AsyncStorage.setItem('isLoggedIn', '');
-    AsyncStorage.setItem('token', '');
-    AsyncStorage.setItem('userType', '');
+    AsyncStorage.setItem("isLoggedIn", "");
+    AsyncStorage.setItem("token", "");
+    AsyncStorage.setItem("userType", "");
     router.push("/auth/LoginScreen");
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute className="bg-[#F5F5F5]">
       <View className="flex-1 justify-center items-center p-4 bg-gray-100">
         <Text className="text-4xl font-bold mb-6">User Profile</Text>
         {user ? (
@@ -39,8 +37,7 @@ const ProfileScreen = () => {
         )}
       </View>
     </ProtectedRoute>
-  )
-}
+  );
+};
 
-
-export default ProfileScreen
+export default ProfileScreen;

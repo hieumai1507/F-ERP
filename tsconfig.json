@@ -3,16 +3,26 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
-    
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-, "app/(redux)/authSlice.js", "app/(redux)/store.js", "app/auth/LoginScreen.js", "components/AppGradient.tsx", "app/_layout.js", "app/(tabs)/_layout.js", "app/(tabs)/CalendarScreen.js", "app/(tabs)/HomeScreen.js", "app/(tabs)/PersonalScreen.js", "app/(tabs)/ProfileScreen.js", "app/request/createRequest.js", "app/request/request.js", "app/index.jsx"  ]
+    "expo-env.d.ts",
+    "app/(redux)/authSlice.js",
+    "app/(redux)/store.js",
+    "app/auth/LoginScreen.js",
+    "components/AppGradient.tsx",
+    "app/_layout.jsx",
+    "app/(tabs)/_layout.jsx",
+    "app/(tabs)/CalendarScreen.jsx",
+    "app/(tabs)/HomeScreen.jsx",
+    "app/(tabs)/PersonalScreen.jsx",
+    "app/(tabs)/ProfileScreen.jsx",
+    "app/request/createRequest.jsx",
+    "app/request/request.jsx",
+    "app/index.jsx"
+  ]
 }

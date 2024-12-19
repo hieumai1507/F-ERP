@@ -12,34 +12,41 @@ function AppWrapper() {
   return (
     <ToastProvider>
       <Stack>
-        <Stack.Screen name="index"  options={{ headerShown: false }} />
-        <Stack.Screen name="auth/LoginScreen"  options={{ headerShown: false }} />
-        <Stack.Screen name="auth/RegisterScreen" options={{ headerShown: false}} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="auth/LoginScreen"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="auth/RegisterScreen"
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="AdminScreen" options={{ headerShown: false }} />
-        <Stack.Screen 
+        <Stack.Screen
           name="request/request"
           options={{
-            headerShown: true,
+            headerShown: false,
             title: "Xin phép",
             headerBackTitle: "Back",
           }}
         />
-        <Stack.Screen 
+        <Stack.Screen
           name="request/createRequest"
           options={{
-            headerShown: true,
+            headerShown: false,
             title: "Tạo đơn",
             headerBackTitle: "Back",
           }}
         />
-        <Stack.Screen 
+        <Stack.Screen
           name="UpdateProfile/UpdateProfile"
           options={{
-            headerShown: true,
+            headerShown: false,
             title: "Edit Profile",
             headerBackTitle: "Back",
           }}
         />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
     </ToastProvider>
   );

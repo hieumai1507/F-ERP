@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,53 +6,51 @@ import {
   TextInput,
   ScrollView,
   StyleSheet,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
-  Alert
-} from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+  Alert,
+  SafeAreaView,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useSelector } from "react-redux";
-import {Avatar} from 'react-native-paper';
-import Back from 'react-native-vector-icons/Ionicons';
-import axios from 'axios';
-import {useRoute} from '@react-navigation/native';
-import Toast from 'react-native-toast-message';
-import { useNavigation } from '@react-navigation/native';
-import { router } from 'expo-router';
-import * as FileSystem from 'expo-file-system';
+import { Avatar } from "react-native-paper";
+import Back from "react-native-vector-icons/Ionicons";
+import axios from "axios";
+import { useRoute } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
+import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
+import * as FileSystem from "expo-file-system";
+import fonts from "@/constants/fonts";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { SERVER_URI } from "../../utils/uri";
 
-
-const height = Dimensions.get('window').height * 1;
 function UpdateProfile() {
-  const [image, setImage] = useState('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [gender, setGender] = useState('');
-  const [department, setDepartment] = useState('');
-  const [mobile, setMobile] = useState('');
+  const [image, setImage] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [gender, setGender] = useState("");
+  const [department, setDepartment] = useState("");
+  const [mobile, setMobile] = useState("");
   const route = useRoute();
   const navigation = useNavigation();
   const [permissionStatus, setPermissionStatus] = useState(null);
-  const [imageBase64, setImageBase64] = useState(''); // Trạng thái mới lưu ảnh dạng base64
 
   // Function to select photo
 
   const user = useSelector((state) => state.auth.user);
   const userEmail = user.email; // Get email directly from Redux
+
   useEffect(() => {
-    console.log("User updated:", user);
-  }, [route.params?.data, user]);
- 
-  useEffect(() => {
-    
     (async () => {
       // check and request permission for both camera roll in one go
-      const { status: cameraRollStatus } = await 
-      ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status: cameraRollStatus } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       setPermissionStatus(cameraRollStatus);
-    
-      if (route.params?.data) { // Check if data exists
+
+      if (route.params?.data) {
+        // Check if data exists
         const userData = route.params.data;
         setEmail(userData.email);
         setGender(userData.gender);
@@ -62,14 +60,18 @@ function UpdateProfile() {
         setMobile(userData.mobile);
       }
     })();
-  },[route.params?.data]);
+  }, [route.params?.data]);
 
   //function select Photo
   const selectPhoto = async () => {
-    if(permissionStatus !== "granted") {
-      Alert.alert("Permission Required", "This app needs access to your gallery. Please go to settings to grant access");
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if(status !== 'granted') {
+    if (permissionStatus !== "granted") {
+      Alert.alert(
+        "Permission Required",
+        "This app needs access to your gallery. Please go to settings to grant access"
+      );
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
         return;
       } else {
         setPermissionStatus(status);
@@ -83,136 +85,147 @@ function UpdateProfile() {
         aspect: [1, 1],
         quality: 1,
       });
-      if(!result.canceled) {
+      if (!result.canceled) {
         const asset = result.assets[0];
-        // chuyển đổi ảnh sang base64
-        const base64Img = await convertImageToBase64(asset.uri);
-        setImageBase64(base64Img);
+
         setImage(asset.uri);
       }
     } catch (error) {
       console.warn("Error picking image:", error);
-      Alert.alert('Error', "There was an error selecting your image.")
+      Alert.alert("Error", "There was an error selecting your image.");
     }
   };
 
-  const convertImageToBase64 = async (uri) => {
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    }catch (error) {
-      console.error("Lỗi chuyển đổi ảnh sang base64", error);
-      Alert.alert("Error", "Could not convert image");
-      return null;
-    }
-  }
-
-
   //function updateProfile
-  const updateProfile = async () => { 
+  const updateProfile = async () => {
     const formData = new FormData();
-    formData.append('name', name);
-    formData.append('mobile', mobile);
-    formData.append('gender', gender);
-    formData.append('department', department);
+    formData.append("name", name);
+    formData.append("mobile", mobile);
+    formData.append("gender", gender);
+    formData.append("department", department);
     if (image) {
-      const uriParts = image.split('.');
+      const uriParts = image.split(".");
       const fileType = uriParts[uriParts.length - 1];
 
-        try {
-          const info = await FileSystem.getInfoAsync(image);
-          if (info.exists) {
-              formData.append('image', {
-                uri: image,
-                name: `photo.${fileType}`,
-                type: `image/${fileType}`,
-             });
-          } else {
-            Alert.alert('Error', "Could not found image file.");
-              return;
-          }
+      try {
+        const info = await FileSystem.getInfoAsync(image);
+        if (info.exists) {
+          formData.append("image", {
+            uri: image,
+            name: `photo.${fileType}`,
+            type: `image/${fileType}`,
+          });
+        } else {
+          Alert.alert("Error", "Could not found image file.");
+          return;
+        }
       } catch (error) {
-          console.error("File system error",error);
-          Alert.alert('Error', "Error accessing image file");
+        console.error("File system error", error);
+        Alert.alert("Error", "Error accessing image file");
       }
     }
 
     try {
-      const res = await axios.post('http://192.168.50.53:5001/update-user', { // Use correct IP if different
+      const res = await axios.post(`${SERVER_URI}/update-user`, {
+        // Use correct IP if different
         name,
         mobile,
         gender,
         department,
-        image: imageBase64, // Send base64 image data
+        image, // Send base64 image data
         email: userEmail,
       });
 
       if (res.data.status === "Ok") {
-        Toast.show({ type: 'success', text1: 'Updated' });
+        Toast.show({ type: "success", text1: "Updated" });
         //
         setTimeout(() => {
-          Alert.alert(
-            "Thành công!",
-            "Cập nhật hồ sơ thành công!",
-            [
-              { text: "OK", onPress: () => navigation.goBack() },
-            ]
-          );
+          Alert.alert("Thành công!", "Cập nhật hồ sơ thành công!", [
+            { text: "OK", onPress: () => navigation.goBack() },
+          ]);
         }, 1000); //
-        
       } else {
         // Handle errors and display specific error messages
         Toast.show({
-          type: 'error',
-          text1: 'Update Failed',
-          text2: res.data.data || 'Something went wrong',
+          type: "error",
+          text1: "Update Failed",
+          text2: res.data.data || "Something went wrong",
         });
-        console.error("Server Error:", res.data.data || 'Something went wrong');
-        Alert.alert("Update Failed", res.data.data || 'Something went wrong'); // hiển thị cảnh báo
+        console.error("Server Error:", res.data.data || "Something went wrong");
+        Alert.alert("Update Failed", res.data.data || "Something went wrong"); // hiển thị cảnh báo
       }
     } catch (error) {
       // Handle network or other errors
       Toast.show({
-        type: 'error',
-        text1: 'Update Failed',
-        text2: 'Network error or server issue',
+        type: "error",
+        text1: "Update Failed",
+        text2: "Network error or server issue",
       });
       console.error("Error updating profile:", error);
 
-        if (error.response) {
-          console.error("Server responded with:", error.response.data); // Log detailed server error
-          Alert.alert('Update Failed', error.response.data.data || 'Server error');
+      if (error.response) {
+        console.error("Server responded with:", error.response.data); // Log detailed server error
+        Alert.alert(
+          "Update Failed",
+          error.response.data.data || "Server error"
+        );
       } else if (error.request) {
-          console.error("No response from server:", error.request); // Log the request
-          Alert.alert('Update Failed', 'No response from server');
-
+        console.error("No response from server:", error.request); // Log the request
+        Alert.alert("Update Failed", "No response from server");
       } else {
-          console.error("Error setting up the request:", error.message);
-          Alert.alert('Update Failed', error.message);
-
+        console.error("Error setting up the request:", error.message);
+        Alert.alert("Update Failed", error.message);
       }
     }
   };
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'} // Điều chỉnh behavior dựa trên hệ điều hành
+      behavior={Platform.OS === "ios" ? "padding" : "height"} // Điều chỉnh behavior dựa trên hệ điều hành
       style={{ flex: 1 }} // Đảm bảo KeyboardAvoidingView chiếm toàn bộ màn hình
     >
+      <SafeAreaView>
+        <LinearGradient
+          colors={["#033495", "#0654B2", "#005AB4", "#38B6FF"]}
+          locations={[0, 0.16, 0.32, 1]} // Vị trí tương ứng với phần trăm
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }} // Hoặc điều chỉnh theo hướng gradient mong muốn
+          className="w-full h-[109px] justify-between flex-row items-center"
+        >
+          <TouchableOpacity
+            className=" ml-[15px] w-[30px] h-[30px]  border-none rounded-[6px] justify-center items-center"
+            onPress={() => router.back()}
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
+            }}
+          >
+            <Ionicons name="chevron-back" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text
+            className="justify-center items-center text-[#FFFFFF] mr-[170px]"
+            style={{
+              fontFamily: fonts["BeVietNamPro-SemiBold"],
+              fontSize: 16,
+            }}
+          >
+            Edit Profile
+          </Text>
+        </LinearGradient>
+      </SafeAreaView>
       <ScrollView
-        keyboardShouldPersistTaps={'always'}
+        keyboardShouldPersistTaps={"always"}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 40}}>
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         <View>
           <View style={styles.camDiv}>
             <View style={styles.camIconDiv}>
-              <Back name="camera" size={22} style={styles.cameraIcon} onPress={() => router.back()} />
+              <Back
+                name="camera"
+                size={22}
+                style={styles.cameraIcon}
+                onPress={() => router.back()}
+              />
             </View>
 
             <TouchableOpacity onPress={() => selectPhoto()}>
@@ -220,9 +233,9 @@ function UpdateProfile() {
                 size={140}
                 style={styles.avatar}
                 source={{
-                  uri:
-                  image ? image :
-                       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQMAAADCCAMAAAB6zFdcAAAAM1BMVEXFzeD////Byt7L0uPByd7Q1+b7/P3j5/Dv8fbe4+3r7vTFzuDL0+P19/rn6/LZ3urW2+lU+LHUAAAFLklEQVR4nO2dC3arMAxEQXwCcfjsf7XPkLw2tEka5AEziu8CeuKpJVmyLLIskUgkEkdFbsT+HXEQKbNqOPWN59y72D9nd/z/vWqbOv/mozSY9n116vIl1acYg1++G9v+5/rzvMs+QwL/7x/O9a/lT5zL2D9uF7wAzcP1e+pP2AQi4/mZAJ6TfQ3EtY9N4D+jdQ2k6F8K4OltayDFKyP4cghmI6PzVvDnHrDuEqR9UwFPY1IEufw+C72yh8LeIUFOaxSY6K0dFt2qTXDDVJCUi0IBT2vHHmTUSWAnPjgZtBJ4p2BjJ4RIYCSHlCpEAi+CAXMowiSwIIJoguKSE7k5rD8aPWDg3gnKg8EPLrGXEUL5tGC2ijr2OkIIjAlfEJdVBLMNcmprQEnAW09YUzT5C9aNADgbfMGaPQlOgrwj1cAlDZIGGVYD2ktIpAasiRNQgzxpkOektoCMjUkDT+zFaEFqwNqohtSgiL0YHcHlVAMaoCooM6SJo/qK7RGk+yBpkGVBl2w2NAi7aEwamNEAWE5MGiQNkgZJg6RB0sCEBoj+C3YN0j5IGkyks3LKnSegdaSkQdIgaUCtwcf7RJHy02OjVG3/+knvSlxJd+uK7Emb6eqOrQVBoJvgCtu16xYasF23QXsPWDVI+yArN9CALTyW6LhAqAE8NuaEcQH2fOMbtkNS+e7IC8MaYIuJM3TnRGwxcYbvPQ+0eDBD95TFIRv3rwyx17Qa/EGRbmqSAz1xvSP2ktaDvW3MOV9xoJ0i43tftEPgc4n4U1Ls9ajAbgTOkSCh02AW1GxJ4w2gCKwSIAspF0pLmIB5BNaXvhnwnMSXMn6DqrBzBoUrqKoiXdp8B6qqWMVeSADyzijhNyDeBiinyOwSUc95uAemYZ66sl0wLYGcFPmK6gsgCTRzZJxAlJe5TQFyQiA3hQxRVuSOChPBXrEW2trBf/RDts1sg+C8iXZA1oKwc9IY++dDCDojUKcKd5T67JF6ou4C9SHBhjO4os2hiWupv1Hm0JY00LpFKx5xQmsLpjRQdisy19R/om3MsaSB9rxsSgOdBKY00E5SZOxBeoa2kGJJA+01gyEN1JmjJQ20jxnYq+p3qPNGQxqo66qtHQ3UfUlJA0MalKJ+8NnyPfh/hFzOnbpFr6vP7JeNGaALw0BJMfzemT4+IhqSYq8hFESDInNj3ky4BPSXroieLPZDAuI7nuROsUS84iAvqKmT5gWxVxEIQgJuY8BsA+6NgPmyMXVkQHXuM+cMuBEIjO98Z4K78r5pOFtVpWiRn7Qd+aop5QU9AqJuMyYVRKoNJkT58OD/cuy1vYUX4LTBvLgrzVAcXwYpthPgSjcc2ybkgjoRvKQvjqrCVl7gEU11RJMQGTeYFvicbjyaCnsrMFG3R1JBsnZjR/hEhf4gJiHi0NOg1nCOL8OejvAJ3RBTBScy7O4GHlCfXCwV4hrBkvMlQmYpZXQjWLJ7sJTyEEawZNfMsowUC/+m38kxiNtgbDCMZgfHIMUuaVEA3cYnBnx5aAu8e9xMASkYFJjoNpo/K+7oVnBPg68xuKw8zoHoPXp0pCzHg0bDV0CTa3EsjmBJjUunsB9u35Ua08wkGecmuIEIEVIReoIFwTf38JHhEQgcxuqOlx4qCBFBCnY7uKH/uhV0SHRU9CNFUO1EB0A9TMKIIczoggP+QxpRUQ0cM+MMrmiezG7x0bmoKDYCZhLqgVjf8WvhfLhkfaPnFt/di8zq6XNbfIczMqsHDW3xTdrYPFvrP7kiUsVMV4ODAAAAAElFTkSuQmCC'
+                  uri: image
+                    ? image
+                    : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQMAAADCCAMAAAB6zFdcAAAAM1BMVEXFzeD////Byt7L0uPByd7Q1+b7/P3j5/Dv8fbe4+3r7vTFzuDL0+P19/rn6/LZ3urW2+lU+LHUAAAFLklEQVR4nO2dC3arMAxEQXwCcfjsf7XPkLw2tEka5AEziu8CeuKpJVmyLLIskUgkEkdFbsT+HXEQKbNqOPWN59y72D9nd/z/vWqbOv/mozSY9n116vIl1acYg1++G9v+5/rzvMs+QwL/7x/O9a/lT5zL2D9uF7wAzcP1e+pP2AQi4/mZAJ6TfQ3EtY9N4D+jdQ2k6F8K4OltayDFKyP4cghmI6PzVvDnHrDuEqR9UwFPY1IEufw+C72yh8LeIUFOaxSY6K0dFt2qTXDDVJCUi0IBT2vHHmTUSWAnPjgZtBJ4p2BjJ4RIYCSHlCpEAi+CAXMowiSwIIJoguKSE7k5rD8aPWDg3gnKg8EPLrGXEUL5tGC2ijr2OkIIjAlfEJdVBLMNcmprQEnAW09YUzT5C9aNADgbfMGaPQlOgrwj1cAlDZIGGVYD2ktIpAasiRNQgzxpkOektoCMjUkDT+zFaEFqwNqohtSgiL0YHcHlVAMaoCooM6SJo/qK7RGk+yBpkGVBl2w2NAi7aEwamNEAWE5MGiQNkgZJg6RB0sCEBoj+C3YN0j5IGkyks3LKnSegdaSkQdIgaUCtwcf7RJHy02OjVG3/+knvSlxJd+uK7Emb6eqOrQVBoJvgCtu16xYasF23QXsPWDVI+yArN9CALTyW6LhAqAE8NuaEcQH2fOMbtkNS+e7IC8MaYIuJM3TnRGwxcYbvPQ+0eDBD95TFIRv3rwyx17Qa/EGRbmqSAz1xvSP2ktaDvW3MOV9xoJ0i43tftEPgc4n4U1Ls9ajAbgTOkSCh02AW1GxJ4w2gCKwSIAspF0pLmIB5BNaXvhnwnMSXMn6DqrBzBoUrqKoiXdp8B6qqWMVeSADyzijhNyDeBiinyOwSUc95uAemYZ66sl0wLYGcFPmK6gsgCTRzZJxAlJe5TQFyQiA3hQxRVuSOChPBXrEW2trBf/RDts1sg+C8iXZA1oKwc9IY++dDCDojUKcKd5T67JF6ou4C9SHBhjO4os2hiWupv1Hm0JY00LpFKx5xQmsLpjRQdisy19R/om3MsaSB9rxsSgOdBKY00E5SZOxBeoa2kGJJA+01gyEN1JmjJQ20jxnYq+p3qPNGQxqo66qtHQ3UfUlJA0MalKJ+8NnyPfh/hFzOnbpFr6vP7JeNGaALw0BJMfzemT4+IhqSYq8hFESDInNj3ky4BPSXroieLPZDAuI7nuROsUS84iAvqKmT5gWxVxEIQgJuY8BsA+6NgPmyMXVkQHXuM+cMuBEIjO98Z4K78r5pOFtVpWiRn7Qd+aop5QU9AqJuMyYVRKoNJkT58OD/cuy1vYUX4LTBvLgrzVAcXwYpthPgSjcc2ybkgjoRvKQvjqrCVl7gEU11RJMQGTeYFvicbjyaCnsrMFG3R1JBsnZjR/hEhf4gJiHi0NOg1nCOL8OejvAJ3RBTBScy7O4GHlCfXCwV4hrBkvMlQmYpZXQjWLJ7sJTyEEawZNfMsowUC/+m38kxiNtgbDCMZgfHIMUuaVEA3cYnBnx5aAu8e9xMASkYFJjoNpo/K+7oVnBPg68xuKw8zoHoPXp0pCzHg0bDV0CTa3EsjmBJjUunsB9u35Ua08wkGecmuIEIEVIReoIFwTf38JHhEQgcxuqOlx4qCBFBCnY7uKH/uhV0SHRU9CNFUO1EB0A9TMKIIczoggP+QxpRUQ0cM+MMrmiezG7x0bmoKDYCZhLqgVjf8WvhfLhkfaPnFt/di8zq6XNbfIczMqsHDW3xTdrYPFvrP7kiUsVMV4ODAAAAAElFTkSuQmCC",
                 }}
               />
             </TouchableOpacity>
@@ -232,12 +245,13 @@ function UpdateProfile() {
             style={{
               marginTop: 50,
               marginHorizontal: 22,
-            }}>
+            }}
+          >
             <View style={styles.infoEditView}>
               <Text style={styles.infoEditFirst_text}>Username</Text>
               <TextInput
                 placeholder="Your Name"
-                placeholderTextColor={'#999797'}
+                placeholderTextColor="#999797"
                 style={styles.infoEditSecond_text}
                 onChangeText={setName}
                 value={name}
@@ -249,7 +263,7 @@ function UpdateProfile() {
               <TextInput
                 editable={false}
                 placeholder={user.email}
-                placeholderTextColor={'#999797'}
+                placeholderTextColor={"#000000"}
                 style={styles.infoEditSecond_text}
               />
             </View>
@@ -259,16 +273,36 @@ function UpdateProfile() {
 
               <View style={styles.genderButtonContainer}>
                 <TouchableOpacity
-                  style={[styles.genderButton, gender === 'Male' && styles.selectedGenderButton]}
-                  onPress={() => setGender('Male')}
+                  style={[
+                    styles.genderButton,
+                    gender === "Male" && styles.selectedGenderButton,
+                  ]}
+                  onPress={() => setGender("Male")}
                 >
-                  <Text style={[styles.genderButtonText, gender === 'Male' && styles.selectedGenderButtonText]}>Male</Text>
+                  <Text
+                    style={[
+                      styles.genderButtonText,
+                      gender === "Male" && styles.selectedGenderButtonText,
+                    ]}
+                  >
+                    Male
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.genderButton, gender === 'Female' && styles.selectedGenderButton]}
-                  onPress={() => setGender('Female')}
+                  style={[
+                    styles.genderButton,
+                    gender === "Female" && styles.selectedGenderButton,
+                  ]}
+                  onPress={() => setGender("Female")}
                 >
-                  <Text style={[styles.genderButtonText, gender === 'Female' && styles.selectedGenderButtonText]}>Female</Text>
+                  <Text
+                    style={[
+                      styles.genderButtonText,
+                      gender === "Female" && styles.selectedGenderButtonText,
+                    ]}
+                  >
+                    Female
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -276,7 +310,7 @@ function UpdateProfile() {
               <Text style={styles.infoEditFirst_text}>Department</Text>
               <TextInput
                 placeholder="Department"
-                placeholderTextColor={'#999797'}
+                placeholderTextColor={"#999797"}
                 keyboardType="default"
                 maxLength={10}
                 style={styles.infoEditSecond_text}
@@ -289,7 +323,7 @@ function UpdateProfile() {
               <Text style={styles.infoEditFirst_text}>Mobile No</Text>
               <TextInput
                 placeholder="Your Mobile No"
-                placeholderTextColor={'#999797'}
+                placeholderTextColor={"#999797"}
                 keyboardType="numeric"
                 maxLength={10}
                 style={styles.infoEditSecond_text}
@@ -301,7 +335,8 @@ function UpdateProfile() {
           <View style={styles.button}>
             <TouchableOpacity
               onPress={() => updateProfile()}
-              style={styles.inBut}>
+              style={styles.inBut}
+            >
               <View>
                 <Text style={styles.textSign}>Update</Text>
               </View>
@@ -311,139 +346,139 @@ function UpdateProfile() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
     opacity: 0.5,
-    backgroundColor: 'black',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "black",
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 1,
     height: 1000,
   },
   button: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 0,
-    alignItems: 'center',
-    textAlign: 'center',
+    alignItems: "center",
+    textAlign: "center",
     marginTop: 30,
   },
   textSign: {
     fontSize: 18,
-    fontWeight: '600',
-    color: 'white',
+    fontWeight: "600",
+    color: "white",
   },
   inBut: {
-    width: '70%',
-    backgroundColor: '#0B6CA7',
-    alignItems: 'center',
+    width: "70%",
+    backgroundColor: "#0B6CA7",
+    alignItems: "center",
     paddingHorizontal: 15,
     paddingVertical: 15,
     borderRadius: 50,
   },
   header: {
-    backgroundColor: '#0163D2',
-    flexDirection: 'row',
+    backgroundColor: "#0163D2",
+    flexDirection: "row",
     height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   avatar: {
     borderRadius: 80,
     marginTop: 50,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     height: 160,
     width: 160,
     padding: 8,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderWidth: 1,
     elevation: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   camDiv: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
   },
   camIconDiv: {
-    position: 'absolute',
+    position: "absolute",
     right: 142,
     zIndex: 1,
     bottom: 5,
     height: 36,
     width: 36,
-    backgroundColor: '#0163D2',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#0163D2",
+    justifyContent: "center",
+    alignItems: "center",
     borderRadius: 18,
   },
   cameraIcon: {
-    color: 'white',
+    color: "white",
   },
   backIcon: {
     marginLeft: 20,
-    color: 'white',
+    color: "white",
   },
   nameText: {
-    color: 'white',
+    color: "white",
     fontSize: 24,
 
-    fontStyle: 'normal',
-    fontFamily: 'Open Sans',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontStyle: "normal",
+    fontFamily: "Open Sans",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   infoEditView: {
     marginTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderColor: '#e6e6e6',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderColor: "#e6e6e6",
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: "#ccc",
     paddingBottom: 12,
   },
   infoEditFirst_text: {
-    color: '#7d7c7c',
+    color: "#7d7c7c",
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: "400",
     marginRight: 12,
   },
   infoEditSecond_text: {
-    color: 'black',
-    fontStyle: 'normal',
-    fontFamily: 'Open Sans',
+    color: "black",
+    fontStyle: "normal",
+    fontFamily: "Open Sans",
     fontSize: 15,
-    textAlignVertical: 'center',
-    textAlign: 'right',
+    textAlignVertical: "center",
+    textAlign: "right",
   },
   genderButtonContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   genderButton: {
-    backgroundColor: '#e0e0e0', // Light gray
+    backgroundColor: "#e0e0e0", // Light gray
     borderRadius: 20, // Rounded buttons
     paddingVertical: 8,
     paddingHorizontal: 16,
     marginRight: 8,
   },
   selectedGenderButton: {
-    backgroundColor: '#2196F3', // Blue for selected (adjust as needed)
+    backgroundColor: "#2196F3", // Blue for selected (adjust as needed)
   },
   genderButtonText: {
     fontSize: 14, // Slightly smaller font size
-    color: '#333', // Dark gray
+    color: "#333", // Dark gray
   },
   selectedGenderButtonText: {
-    color: 'white',
+    color: "white",
   },
 });
 export default UpdateProfile;

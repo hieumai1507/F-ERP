@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const ProtectedRoute = ({ children }) => {
   const router = useRouter();
   const { user, loading } = useSelector((state) => state.auth);
-  const [initializing, setInitializing] = useState(true); 
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
-        if (!isLoggedIn) { //only redirect if 'isLoggedIn' is not true
+        const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
+        if (!isLoggedIn) {
+          //only redirect if 'isLoggedIn' is not true
           router.push("/auth/LoginScreen");
         }
       } catch (error) {
@@ -32,7 +33,6 @@ const ProtectedRoute = ({ children }) => {
       </View>
     );
   }
-
 
   return children;
 };
