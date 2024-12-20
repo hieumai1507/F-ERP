@@ -22,6 +22,7 @@ import { SERVER_URI } from "../../utils/uri";
 import fonts from "@/constants/fonts";
 import { LinearGradient } from "expo-linear-gradient";
 import Loading from "@/components/Loading";
+import { jwtDecode } from "jwt-decode";
 
 const Request = () => {
   const [selectedStatus, setSelectedStatus] = useState("All");
@@ -33,8 +34,12 @@ const Request = () => {
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
   const [leaveRequests, setLeaveRequests] = useState([]);
-  const [refreshing, setRefreshing] = useState(false); // Add refreshing state
+  const [refreshing, setRefreshing] = useState(false);
+  const [currentUser, setCurrentUser] = useState([]);
+
   const userEmail = useSelector((state) => state.auth.user?.email); // Get email from Redux
+  const userLogin = useSelector((state) => state.auth.user);
+  const userId = userLogin._id;
 
   useEffect(() => {
     // Set your department list here
@@ -76,11 +81,11 @@ const Request = () => {
       "Varlders",
     ]);
 
-    if (userEmail) {
+    if (userEmail && userId) {
       // Only fetch if userEmail exists
       fetchLeaveRequests();
     }
-  }, [userEmail]); // Add userEmail to the dependency array
+  }, [userEmail, userId]); // Add userEmail to the dependency array
   const fetchLeaveRequests = async () => {
     setLoading(true); // Set loading to true before fetching
     setRefreshing(true);
@@ -94,18 +99,22 @@ const Request = () => {
         return;
       }
       const response = await axios.get(
-        `${SERVER_URI}/get-leave-requests-by-email`,
+        `https://erpapi.folinas.com/api/v1/checkInRequests?page=1&limit=10000`,
         {
           // New route
-          params: { email: userEmail },
+
           headers: {
             Authorization: `Bearer ${token}`, // Add Bearer prefix
           },
         }
       );
 
-      if (response.status === 200 && response.data.status === "ok") {
+      if (response.status === 200) {
         setLeaveRequests(response.data.data);
+        const filteredRequests = response.data.data.filter(
+          (req) => req.userId === userId
+        );
+        setCurrentUser(filteredRequests);
       } else {
         console.error("Error fetching leave requests", response.data);
         Alert.alert(
@@ -114,7 +123,7 @@ const Request = () => {
         );
       }
     } catch (error) {
-      // ... error handling
+      //error handling
       console.error("Error fetching leave requests", error);
       Alert.alert("Error", error.message); //network error
     } finally {
@@ -128,15 +137,15 @@ const Request = () => {
 
   const getStatusCount = (status) => {
     if (status === "All") {
-      return leaveRequests.filter((req) => {
+      return currentUser.filter((req) => {
         // Count ALL within date range
-        const requestDate = new Date(req.date.split("/").reverse().join("-"));
+        const requestDate = new Date(req.requestDate);
         return requestDate >= fromDate && requestDate <= toDate;
       }).length;
     } else {
-      return leaveRequests.filter((req) => {
+      return currentUser.filter((req) => {
         // Count specific status within date range
-        const requestDate = new Date(req.date.split("/").reverse().join("-"));
+        const requestDate = new Date(req.requestDate);
         return (
           req.status === status &&
           requestDate >= fromDate &&
@@ -266,7 +275,7 @@ const Request = () => {
                 fontSize: 10,
               }}
             >
-              {formattedDate}
+              {moment(item.requestDate).format("DD/MM/YYYY")}
             </Text>
             <Text
               className="text-gray-800 w-1/4 text-center"
@@ -275,7 +284,7 @@ const Request = () => {
                 fontSize: 10,
               }}
             >
-              {formattedTime}
+              {moment(item.createdAt).format("HH:mm:ss")}
             </Text>
             <Text
               className="text-gray-800 w-1/4 text-center"
@@ -300,8 +309,8 @@ const Request = () => {
     );
   }
 
-  const filteredLeaveRequests = leaveRequests.filter((req) => {
-    const requestDate = new Date(req.date.split("/").reverse().join("-"));
+  const filteredLeaveRequests = currentUser.filter((req) => {
+    const requestDate = new Date(req.requestDate);
     return (
       requestDate >= fromDate &&
       requestDate <= toDate &&

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   Text,
@@ -6,44 +6,126 @@ import {
   ImageBackground,
   Pressable,
   SafeAreaView,
-  ScrollView,
-  RefreshControl,
 } from "react-native";
+import {
+  addDays,
+  format,
+  getMonth,
+  getYear,
+  lastDayOfMonth,
+  startOfMonth,
+} from "date-fns";
+import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 import { styled } from "nativewind";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
 import { Avatar } from "react-native-paper";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import fonts from "@/constants/fonts";
-import Calendar_2 from "@/assets/images/homeicon/Calendar_2.png";
-import Group from "@/assets/images/homeicon/Group.png";
-import Vector from "@/assets/images/homeicon/Vector.png";
-import Contact from "@/assets/images/homeicon/Contact.png";
-import img from "@/assets/images/homeicon/img.png";
+import Calendar_2 from "@/assets/images/homeIcon/Calendar_2.png";
+import Group from "@/assets/images/homeIcon/Group.png";
+import Vector from "@/assets/images/homeIcon/Vector.png";
+import Contact from "@/assets/images/homeIcon/Contact.png";
+import img from "@/assets/images/homeIcon/img.png";
 import Loading from "@/components/Loading";
+
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledImageBackground = styled(ImageBackground);
 const StyledPressable = styled(Pressable);
 
+const API_URL =
+  "https://erpapi.folinas.com/api/v1/checkIns/7913Q3CMR9LKWU42/detail";
+
+const getStartTimeGeneral = async () => {
+  const now = new Date();
+  const gmtTimeZone = "GMT";
+  const gmtNow = utcToZonedTime(now, gmtTimeZone);
+
+  const firstDayOfMonth = startOfMonth(gmtNow);
+  const lastDayOfPreviousMonth = addDays(firstDayOfMonth, -1);
+  const startTime = new Date(
+    getYear(lastDayOfPreviousMonth),
+    getMonth(lastDayOfPreviousMonth),
+    lastDayOfMonth(lastDayOfPreviousMonth).getDate(),
+    17,
+    0,
+    0
+  );
+  const formattedStartTime = format(
+    zonedTimeToUtc(startTime, gmtTimeZone),
+    "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
+  );
+
+  return formattedStartTime;
+};
+
+const getEndTimeGeneral = async () => {
+  const now = new Date();
+  const gmtTimeZone = "GMT";
+  const gmtNow = utcToZonedTime(now, gmtTimeZone);
+  let endTime;
+
+  if (gmtNow.getHours() < 17) {
+    endTime = addDays(gmtNow, -1);
+  } else {
+    endTime = gmtNow;
+  }
+  const end_time_obj = new Date(
+    getYear(endTime),
+    getMonth(endTime),
+    endTime.getDate(),
+    17,
+    0,
+    0
+  );
+  const formattedEndTime = format(
+    zonedTimeToUtc(end_time_obj, gmtTimeZone),
+    "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
+  );
+  return formattedEndTime;
+};
 const HomeScreen = (props) => {
   console.log(props);
+  const [loading, setLoading] = useState(true);
   const user = useSelector((state) => state.auth.user);
-  const [refreshing, setRefreshing] = useState(false);
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      console.log("refresh data");
-    }, 2000);
+  const [checkInData, setCheckInData] = useState(null);
+  useEffect(() => {
+    const fetchUserInfoAndCheckIn = async () => {
+      try {
+        const startTime = await getStartTimeGeneral();
+        const endTime = await getEndTimeGeneral();
+        const url = `${API_URL}?from=${startTime}&to=${endTime}&page=1&limit=100`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (response.ok) {
+          if (data && data.data && data.data.length > 0) {
+            setCheckInData(data.data);
+          } else {
+            setCheckInData([]);
+          }
+        } else {
+          console.log("API Error:", response.status, data);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserInfoAndCheckIn();
   }, []);
-  if (refreshing) {
+
+  if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Loading />
       </View>
     );
   }
+
   // Lấy ngày và giờ hiện tại
   const currentDate = new Date();
 
@@ -55,6 +137,12 @@ const HomeScreen = (props) => {
   }/${currentDate.getFullYear()}`;
 
   // Định dạng giờ theo kiểu hh:mm - hh:mm
+  const todayCheckIn =
+    checkInData && checkInData.length > 0
+      ? checkInData.find(
+          (item) => format(new Date(item.date), "dd/MM/yyyy") === formattedDate
+        )
+      : null;
   return (
     <SafeAreaView className="bg-[#F5F5F5] flex-1">
       <StyledImageBackground
@@ -69,7 +157,7 @@ const HomeScreen = (props) => {
               source={{
                 uri:
                   user == "" || user == null
-                    ? "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQMAAADCCAMAAAB6zFdcAAAAM1BMVEXFzeD////Byt7L0uPByd7Q1+b7/P3j5/Dv8fbe4+3r7vTFzuDL0+P19/rn6/LZ3urW2+lU+LHUAAAFLklEQVR4nO2dC3arMAxEQXwCcfjsf7XPkLw2tEka5AEziu8CeuKpJVmyLLIskUgkEkdFbsT+HXEQKbNqOPWN59y72D9nd/z/vWqbOv/mozSY9n116vIl1acYg1++G9v+5/rzvMs+QwL/7x/O9a/lT5zL2D9uF7wAzcP1e+pP2AQi4/mZAJ6TfQ3EtY9N4D+jdQ2k6F8K4OltayDFKyP4cghmI6PzVvDnHrDuEqR9UwFPY1IEufw+C72yh8LeIUFOaxSY6K0dFt2qTXDDVJCUi0IBT2vHHmTUSWAnPjgZtBJ4p2BjJ4RIYCSHlCpEAi+CAXMowiSwIIJoguKSE7k5rD8aPWDg3gnKg8EPLrGXEUL5tGC2ijr2OkIIjAlfEJdVBLMNcmprQEnAW09YUzT5C9aNADgbfMGaPQlOgrwj1cAlDZIGGVYD2ktIpAasiRNQgzxpkOektoCMjUkDT+zFaEFqwNqohtSgiL0YHcHlVAMaoCooM6SJo/qK7RGk+yBpkGVBl2w2NAi7aEwamNEAWE5MGiQNkgZJg6RB0sCEBoj+C3YN0j5IGkyks3LKnSegdaSkQdIgaUCtwcf7RJHy02OjVG3/+knvSlxJd+uK7Emb6eqOrQVBoJvgCtu16xYasF23QXsPWDVI+yArN9CALTyW6LhAqAE8NuaEcQH2fOMbtkNS+e7IC8MaYIuJM3TnRGwxcYbvPQ+0eDBD95TFIRv3rwyx17Qa/EGRbmqSAz1xvSP2ktaDvW3MOV9xoJ0i43tftEPgc4n4U1Ls9ajAbgTOkSCh02AW1GxJ4w2gCKwSIAspF0pLmIB5BNaXvhnwnMSXMn6DqrBzBoUrqKoiXdp8B6qqWMVeSADyzijhNyDeBiinyOwSUc95uAemYZ66sl0wLYGcFPmK6gsgCTRzZJxAlJe5TQFyQiA3hQxRVuSOChPBXrEW2trBf/RDts1sg+C8iXZA1oKwc9IY++dDCDojUKcKd5T67JF6ou4C9SHBhjO4os2hiWupv1Hm0JY00LpFKx5xQmsLpjRQdisy19R/om3MsaSB9rxsSgOdBKY00E5SZOxBeoa2kGJJA+01gyEN1JmjJQ20jxnYq+p3qPNGQxqo66qtHQ3UfUlJA0MalKJ+8NnyPfh/hFzOnbpFr6vP7JeNGaALw0BJMfzemT4+IhqSYq8hFESDInNj3ky4BPSXroieLPZDAuI7nuROsUS84iAvqKmT5gWxVxEIQgJuY8BsA+6NgPmyMXVkQHXuM+cMuBEIjO98Z4K78r5pOFtVpWiRn7Qd+aop5QU9AqJuMyYVRKoNJkT58OD/cuy1vYUX4LTBvLgrzVAcXwYpthPgSjcc2ybkgjoRvKQvjqrCVl7gEU11RJMQGTeYFvicbjyaCnsrMFG3R1JBsnZjR/hEhf4gJiHi0NOg1nCOL8OejvAJ3RBTBScy7O4GHlCfXCwV4hrBkvMlQmYpZXQjWLJ7sJTyEEawZNfMsowUC/+m38kxiNtgbDCMZgfHIMUuaVEA3cYnBnx5aAu8e9xMASkYFJjoNpo/K+7oVnBPg68xuKw8zoHoPXp0pCzHg0bDV0CTa3EsjmBJjUunsB9u35Ua08wkGecmuIEIEVIReoIFwTf38JHhEQgcxuqOlx4qCBFBCnY7uKH/uhV0SHRU9CNFUO1EB0A9TMKIIczoggP+QxpRUQ0cM+MMrmiezG7x0bmoKDYCZhLqgVjf8WvhfLhkfaPnFt/di8zq6XNbfIczMqsHDW3xTdrYPFvrP7kiUsVMV4ODAAAAAElFTkSuQmCC"
+                    ? "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
                     : user.image,
               }}
               className="w-[50px] h-[50px] rounded-full"
@@ -82,7 +170,7 @@ const HomeScreen = (props) => {
                   fontSize: 16,
                 }}
               >
-                {user.name}
+                {user.fullName}
               </StyledText>
               <StyledText
                 className="text-white text-10"
@@ -92,11 +180,7 @@ const HomeScreen = (props) => {
                 }}
               >
                 {" "}
-                {user.department == "" ||
-                user.department == undefined ||
-                user.department == null
-                  ? ""
-                  : user.department}
+                {user.role.name || "Chưa cập nhật"}
               </StyledText>
             </StyledView>
             <SimpleLineIcons
@@ -116,7 +200,7 @@ const HomeScreen = (props) => {
                   fontSize: 12,
                 }}
               >
-                {formattedDate}
+                Ngày {formattedDate}
               </StyledText>
               <StyledText
                 className="text-sm text-[#64748B]"
@@ -125,7 +209,7 @@ const HomeScreen = (props) => {
                   fontSize: 12,
                 }}
               >
-                07:30 - 17:30
+                7:30-16:30
               </StyledText>
             </StyledView>
             <StyledView className="flex-row justify-between py-1  pt-2">
@@ -156,7 +240,9 @@ const HomeScreen = (props) => {
                   fontSize: 10,
                 }}
               >
-                07:24
+                {todayCheckIn && todayCheckIn["Giờ vào"]
+                  ? todayCheckIn["Giờ vào"]
+                  : "--:--"}
               </Text>
               <Text
                 style={{
@@ -165,7 +251,9 @@ const HomeScreen = (props) => {
                   fontSize: 10,
                 }}
               >
-                --:--
+                {todayCheckIn && todayCheckIn["Giờ ra"]
+                  ? todayCheckIn["Giờ ra"]
+                  : "--:--"}
               </Text>
             </View>
             <StyledText

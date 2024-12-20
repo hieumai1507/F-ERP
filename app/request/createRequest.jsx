@@ -8,6 +8,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
@@ -69,7 +70,7 @@ export default function CreateRequestScreen() {
       return;
     }
     //condition loại = Đi muộn
-    if (loai === "Đi muộn") {
+    if (loai === "Late Arrival") {
       const hours = thoiGian.getHours();
       const minutes = thoiGian.getMinutes();
 
@@ -79,30 +80,54 @@ export default function CreateRequestScreen() {
         return;
       }
     }
+    //translate from Vietnamese to English
+    const TypeMapping = {
+      "Đi muộn": "Late Arrival",
+      "Về sớm": "Early Leave",
+      "Xin nghỉ": "Absent",
+      "Ra ngoài": "Going Out",
+    };
+    const absentTypeMapping = {
+      "Cả ngày": "Day",
+      "Buổi sáng": "Half Day Morning",
+      "Buổi chiều": "Half Day Afternoon",
+    };
+    const translatedType = TypeMapping[loai] || loai;
+    const translatedAbsentType =
+      loai === "Xin nghỉ" ? absentTypeMapping[thoiGianXinNghi] : null;
     //condition loại = Ra Ngoài
     let thoiGianVangMatToSend = null; // giữ nguyên giá trị nếu type là "Ra Ngoài"
-    if (loai === "Ra ngoài") {
+    if (translatedType === "Going Out") {
       thoiGianVangMatToSend = parseInt(thoiGianVangMat, 10);
     }
     //condition loại = Xin nghỉ
     let timeToSend = thoiGian;
     let timeOfDayToSend = null;
-    if (loai === "Xin nghỉ") {
+    if (translatedType === "Absent") {
       timeToSend = null;
-      timeOfDayToSend = thoiGianXinNghi;
+      timeOfDayToSend = translatedAbsentType;
     }
 
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await axios.post(`${SERVER_URI}/create-leave-request`, {
-        token,
-        type: loai,
-        time: timeToSend,
-        date: ngayXinPhep,
-        reason: lyDo,
-        thoiGianVangMat: thoiGianVangMatToSend, // include thoiGianVangMat
-        timeOfDay: timeOfDayToSend, // Send the time of day
-      });
+      const response = await axios.post(
+        "https://erpapi.folinas.com/api/v1/checkInRequests",
+        {
+          token,
+          type: translatedType,
+          requestTime: timeToSend,
+          requestDate: ngayXinPhep,
+          reason: lyDo,
+          goingOutMinutes: thoiGianVangMatToSend, // include thoiGianVangMat
+          absentType: timeOfDayToSend, // Send the time of day
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.data.status === "ok") {
         alert("Đã tạo đơn thành công!");
@@ -115,6 +140,7 @@ export default function CreateRequestScreen() {
     } catch (error) {
       console.error("Error creating request:", error);
       // handle error, maybe show alert to user
+      Alert.alert("Error", "Something went wrong");
     }
   };
 

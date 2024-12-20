@@ -9,15 +9,13 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from "react-native";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import Feather from "react-native-vector-icons/Feather";
 import { useDispatch } from "react-redux";
-import { setUser, setUserType } from "../(redux)/authSlice";
-import { SERVER_URI } from "../../utils/uri";
+import { loginUser, setUser, setUserType } from "../(redux)/authSlice";
 import fonts from "@/constants/fonts";
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -25,12 +23,9 @@ const LoginScreen = () => {
   const [passwordVerify, setPasswordVerify] = useState(false);
   const [showPassword, setShowPassword] = useState(true);
   const dispatch = useDispatch();
-  const handleLoginError = (error) => {
-    if (error.response && error.response.data && error.response.data.data) {
-      Alert.alert("Error", error.response.data.data || "Login failed"); // Use data field for the message.
-    } else {
-      Alert.alert("Invalid Email or Password!");
-    }
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
   };
 
   axios.interceptors.request.use(
@@ -46,61 +41,58 @@ const LoginScreen = () => {
     }
   );
 
-  function handleSubmit() {
+  const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
       Alert.alert("Error", "Email and password cannot be blank!");
       return;
     }
-    console.log(email, password);
-    const userData = {
-      email: email,
-      password,
-    };
+    if (!validateEmail(email)) {
+      Alert.alert("Error", "Invalid email format!");
+      return;
+    }
 
-    axios
-      .post(`${SERVER_URI}/login-user`, userData)
-      .then((res) => {
-        if (res.status === 200 && res.data.status === "ok") {
-          Alert.alert("Logged In Successfully");
-          AsyncStorage.setItem("token", res.data.data);
-          AsyncStorage.setItem("isLoggedIn", JSON.stringify(true));
-          AsyncStorage.setItem("userType", res.data.userType);
-          //Lưu userData và userType vào Redux store
-          dispatch(setUser(res.data.userData));
-          dispatch(setUserType(res.data.userType));
-          if (res.data.userType === "Admin") {
-            router.push("/AdminScreen");
-          } else {
-            router.push("/(tabs)/HomeScreen");
-          }
-        } else {
-          // wrong user
-          handleLoginError({ response: res });
-        }
-      })
-      .catch((error) => {
-        //check what this error is in the logs
-        console.log("Axios catch block", error);
-        //if there is a response, handle it
-        if (error.response) {
-          handleLoginError(error);
-        }
-
-        //otherwise, it's a network error
-        else {
-          Alert.alert("Error", "Could not connect to server");
-        }
+    try {
+      const res = await fetch("https://erpapi.folinas.com/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
       });
-  }
+      const data = await res.json();
+      console.log("API Response data: ", JSON.stringify(data, null, 2));
+      if (res.status === 404) {
+        Alert.alert("Error", "User not found!");
+        return;
+      }
+      if (res.status === 401) {
+        Alert.alert("Error", "Incorrect password!");
+        return;
+      }
+      if (res.status === 200) {
+        if (data && data.accessToken) {
+          await AsyncStorage.setItem("token", data.accessToken);
+          dispatch(setUser(data.user));
+          dispatch(loginUser(data.user));
+          Alert.alert("Success", "Login successful!");
+          router.replace("/(tabs)/HomeScreen");
+        } else {
+          Alert.alert("Error", "Access token not found!");
+        }
+        return;
+      }
+      Alert.alert("Error", "Incorrect password");
+    } catch (error) {
+      console.error("Error during login:", error);
+      Alert.alert("Error", error.message || "Something went wrong");
+    }
+  };
 
   async function getData() {
     const data = await AsyncStorage.getItem("isLoggedIn");
-    console.log(data, "at index.jsx");
+    console.log("Is Logged In?", data);
   }
 
   useEffect(() => {
     getData();
-    console.log("Hii");
   }, []);
 
   return (
@@ -143,13 +135,13 @@ const LoginScreen = () => {
                 <View className="flex flex-row pt-3 pb-1  border border-[#CBD5E1] rounded-lg mb-2">
                   <TextInput
                     placeholder=" Email"
-                    className="flex-1 text-[#05375a] mt-[-12px] px-2"
+                    className="flex-1 text-[#05375a] mt-[-10px] px-2"
                     onChange={(e) => setEmail(e.nativeEvent.text)}
                     style={{ height: 36, width: 360 }}
                   />
                 </View>
               </View>
-              <View>
+              <View className="mt-1">
                 <Text
                   className="mb-2"
                   style={{
@@ -163,7 +155,7 @@ const LoginScreen = () => {
                 <View className="flex flex-row pt-3 pb-1   border border-[#CBD5E1] rounded-lg">
                   <TextInput
                     placeholder=" Mật khẩu"
-                    className="flex-1 text-[#05375a] mt-[-12px] px-2"
+                    className="flex-1 text-[#05375a] mt-[-10px] px-2"
                     onChange={(e) => setPassword(e.nativeEvent.text)}
                     style={{ height: 36, width: 360 }}
                     secureTextEntry={showPassword}
@@ -204,30 +196,6 @@ const LoginScreen = () => {
                 Đăng nhập
               </Text>
             </TouchableOpacity>
-            <View style={{ padding: 15 }}>
-              <Text
-                style={{ fontSize: 14, fontWeight: "bold", color: "#919191" }}
-              >
-                ----Hoặc tiếp tục với----
-              </Text>
-            </View>
-            <View className="items-center justify-center">
-              <TouchableOpacity
-                className="bg-[#0B6CA7] p-3 rounded-full"
-                onPress={() => {
-                  router.push("./RegisterScreen");
-                }}
-              >
-                <FontAwesome
-                  name="user-plus"
-                  color="white"
-                  className="text-white text-2xl"
-                />
-              </TouchableOpacity>
-              <Text className="text-[#0B6CA7] font-bold text-sm mt-2">
-                Đăng ký
-              </Text>
-            </View>
           </View>
         </View>
       </ScrollView>

@@ -1,20 +1,22 @@
 import React from "react";
 import { Text, View, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import ProtectedRoute from "../../components/ProtectedRoute";
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { logoutUser } from "../(redux)/authSlice";
 
 const PersonalScreen = () => {
   const router = useRouter();
   const user = useSelector((state) => state.auth.user); //make sure 'user' is available
+  const dispatch = useDispatch();
+
   function signOut() {
-    AsyncStorage.setItem("isLoggedIn", "");
-    AsyncStorage.setItem("token", "");
-    AsyncStorage.setItem("userType", "");
-    router.push("/auth/LoginScreen");
+    dispatch(logoutUser());
+    console.log("no user login");
+
+    router.replace("/auth/LoginScreen");
   }
 
   return (

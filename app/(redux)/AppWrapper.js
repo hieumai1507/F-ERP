@@ -17,10 +17,7 @@ function AppWrapper() {
           name="auth/LoginScreen"
           options={{ headerShown: false }}
         />
-        <Stack.Screen
-          name="auth/RegisterScreen"
-          options={{ headerShown: false }}
-        />
+
         <Stack.Screen name="AdminScreen" options={{ headerShown: false }} />
         <Stack.Screen
           name="request/request"

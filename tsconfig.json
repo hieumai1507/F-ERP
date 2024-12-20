@@ -23,6 +23,7 @@
     "app/(tabs)/ProfileScreen.jsx",
     "app/request/createRequest.jsx",
     "app/request/request.jsx",
-    "app/index.jsx"
+    "app/index.jsx",
+    "components/APICheckInEveryDay.js"
   ]
 }
