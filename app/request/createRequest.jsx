@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -16,11 +16,11 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import CustomPicker from "@/components/CustomPicker";
-import { SERVER_URI } from "../../utils/uri";
 import { LinearGradient } from "expo-linear-gradient";
 import fonts from "@/constants/fonts";
 import { router } from "expo-router";
-
+import { useSelector } from "react-redux";
+import moment from "moment";
 export default function CreateRequestScreen() {
   const navigation = useNavigation();
 
@@ -33,12 +33,44 @@ export default function CreateRequestScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [thoiGianXinNghi, setThoiGianXinNghi] = useState("Cả ngày");
 
+  const [approvableUsers, setApprovableUsers] = useState([]);
+  const userLogin = useSelector((state) => state.auth.user);
+  const userId = userLogin._id;
+  const departmentName = userLogin.department.name;
+  console.log(departmentName);
   const onChangeTime = (event, selectedDate) => {
     setShowTimePicker(false);
     if (selectedDate) {
       setThoiGian(selectedDate);
     }
   };
+  const getApprovableUsersId = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const response = await axios.get(
+        `https://erpapi.folinas.com/api/v1/users/approvable-users?roleName=Developer`,
+        {
+          header: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response?.data?.success) {
+        const approvableUserIds = response.data.data.map((user) => user._id);
+        setApprovableUsers(approvableUserIds);
+      } else {
+        console.error("Failed to fetch approvable users", response.data);
+        Alert.alert("Error", "Failed to fetch approvable users");
+      }
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Error", "Error fetching approvable users");
+    }
+  };
+  useEffect(() => {
+    getApprovableUsersId();
+  }, []);
+  console.log("approvableUsers", approvableUsers);
 
   const onChangeDate = (event, selectedDate) => {
     setShowDatePicker(false);
@@ -107,19 +139,41 @@ export default function CreateRequestScreen() {
       timeToSend = null;
       timeOfDayToSend = translatedAbsentType;
     }
+    console.log(
+      "userId:",
+      userId,
+      "type:",
+      translatedType,
+      "requestTime:",
+      timeToSend,
+      "requestDate:",
+      ngayXinPhep,
+      "reason:",
+      lyDo,
+      "goingOutMinutes:",
+      thoiGianVangMatToSend,
+      "absentType:",
+      timeOfDayToSend,
+      "approvableUserIds:",
+      approvableUsers
+    );
+    const approvableUserIds = approvableUsers;
+    const now = moment().toISOString();
 
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await axios.post(
         "https://erpapi.folinas.com/api/v1/checkInRequests",
         {
-          token,
           type: translatedType,
           requestTime: timeToSend,
           requestDate: ngayXinPhep,
           reason: lyDo,
+          from: now,
+          to: now,
           goingOutMinutes: thoiGianVangMatToSend, // include thoiGianVangMat
           absentType: timeOfDayToSend, // Send the time of day
+          approvableUserIds,
         },
         {
           headers: {

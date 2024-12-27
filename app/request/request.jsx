@@ -99,7 +99,7 @@ const Request = () => {
         return;
       }
       const response = await axios.get(
-        `https://erpapi.folinas.com/api/v1/checkInRequests?page=1&limit=10000`,
+        `https://erpapi.folinas.com/api/v1/checkInRequests?page=1&limit=2000`,
         {
           // New route
 
@@ -156,8 +156,6 @@ const Request = () => {
   };
 
   const renderLeaveRequest = ({ item }) => {
-    const formattedDate = moment(item.date).format("DD/MM/YYYY"); // Format date
-    const formattedTime = moment(item.time).format("HH:mm"); // Format time
     return (
       <View className="bg-white rounded-[20px] p-[15px]  shadow-md mt-[10px]">
         {/* Container styles */}

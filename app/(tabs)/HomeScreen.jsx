@@ -7,15 +7,7 @@ import {
   Pressable,
   SafeAreaView,
 } from "react-native";
-import {
-  addDays,
-  format,
-  getMonth,
-  getYear,
-  lastDayOfMonth,
-  startOfMonth,
-} from "date-fns";
-import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
+
 import { styled } from "nativewind";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
@@ -37,94 +29,9 @@ const StyledPressable = styled(Pressable);
 const API_URL =
   "https://erpapi.folinas.com/api/v1/checkIns/7913Q3CMR9LKWU42/detail";
 
-const getStartTimeGeneral = async () => {
-  const now = new Date();
-  const gmtTimeZone = "GMT";
-  const gmtNow = utcToZonedTime(now, gmtTimeZone);
-
-  const firstDayOfMonth = startOfMonth(gmtNow);
-  const lastDayOfPreviousMonth = addDays(firstDayOfMonth, -1);
-  const startTime = new Date(
-    getYear(lastDayOfPreviousMonth),
-    getMonth(lastDayOfPreviousMonth),
-    lastDayOfMonth(lastDayOfPreviousMonth).getDate(),
-    17,
-    0,
-    0
-  );
-  const formattedStartTime = format(
-    zonedTimeToUtc(startTime, gmtTimeZone),
-    "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
-  );
-
-  return formattedStartTime;
-};
-
-const getEndTimeGeneral = async () => {
-  const now = new Date();
-  const gmtTimeZone = "GMT";
-  const gmtNow = utcToZonedTime(now, gmtTimeZone);
-  let endTime;
-
-  if (gmtNow.getHours() < 17) {
-    endTime = addDays(gmtNow, -1);
-  } else {
-    endTime = gmtNow;
-  }
-  const end_time_obj = new Date(
-    getYear(endTime),
-    getMonth(endTime),
-    endTime.getDate(),
-    17,
-    0,
-    0
-  );
-  const formattedEndTime = format(
-    zonedTimeToUtc(end_time_obj, gmtTimeZone),
-    "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
-  );
-  return formattedEndTime;
-};
 const HomeScreen = (props) => {
   console.log(props);
-  const [loading, setLoading] = useState(true);
   const user = useSelector((state) => state.auth.user);
-  const [checkInData, setCheckInData] = useState(null);
-  useEffect(() => {
-    const fetchUserInfoAndCheckIn = async () => {
-      try {
-        const startTime = await getStartTimeGeneral();
-        const endTime = await getEndTimeGeneral();
-        const url = `${API_URL}?from=${startTime}&to=${endTime}&page=1&limit=100`;
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (response.ok) {
-          if (data && data.data && data.data.length > 0) {
-            setCheckInData(data.data);
-          } else {
-            setCheckInData([]);
-          }
-        } else {
-          console.log("API Error:", response.status, data);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUserInfoAndCheckIn();
-  }, []);
-
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Loading />
-      </View>
-    );
-  }
 
   // Lấy ngày và giờ hiện tại
   const currentDate = new Date();
@@ -136,13 +43,6 @@ const HomeScreen = (props) => {
     currentDate.getMonth() + 1
   }/${currentDate.getFullYear()}`;
 
-  // Định dạng giờ theo kiểu hh:mm - hh:mm
-  const todayCheckIn =
-    checkInData && checkInData.length > 0
-      ? checkInData.find(
-          (item) => format(new Date(item.date), "dd/MM/yyyy") === formattedDate
-        )
-      : null;
   return (
     <SafeAreaView className="bg-[#F5F5F5] flex-1">
       <StyledImageBackground
@@ -240,9 +140,7 @@ const HomeScreen = (props) => {
                   fontSize: 10,
                 }}
               >
-                {todayCheckIn && todayCheckIn["Giờ vào"]
-                  ? todayCheckIn["Giờ vào"]
-                  : "--:--"}
+                --:--
               </Text>
               <Text
                 style={{
@@ -251,9 +149,7 @@ const HomeScreen = (props) => {
                   fontSize: 10,
                 }}
               >
-                {todayCheckIn && todayCheckIn["Giờ ra"]
-                  ? todayCheckIn["Giờ ra"]
-                  : "--:--"}
+                --:--
               </Text>
             </View>
             <StyledText
