@@ -34,6 +34,7 @@ export default function CreateRequestScreen() {
   const [thoiGianXinNghi, setThoiGianXinNghi] = useState("Cả ngày");
 
   const [approvableUsers, setApprovableUsers] = useState([]);
+  const [approvableFullName, setApprovableFullName] = useState([]);
   const userLogin = useSelector((state) => state.auth.user);
   const userId = userLogin._id;
   const departmentName = userLogin.department.name;
@@ -58,6 +59,10 @@ export default function CreateRequestScreen() {
       if (response?.data?.success) {
         const approvableUserIds = response.data.data.map((user) => user._id);
         setApprovableUsers(approvableUserIds);
+        const approvableUserName = response.data.data.map(
+          (user) => user.fullName
+        );
+        setApprovableFullName(approvableUserName);
       } else {
         console.error("Failed to fetch approvable users", response.data);
         Alert.alert("Error", "Failed to fetch approvable users");
@@ -408,9 +413,10 @@ export default function CreateRequestScreen() {
                 style={{
                   fontFamily: fonts["Inter-Regular"],
                   fontSize: 12,
+                  paddingTop: 3,
                 }}
               >
-                Lỗ Quang Tính
+                {approvableFullName}
               </Text>
             </View>
           </View>
