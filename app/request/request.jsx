@@ -9,13 +9,16 @@ import {
   RefreshControl,
   Alert,
   SafeAreaView,
+  Modal,
+  StyleSheet,
+  ScrollView,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import axios from "axios";
-import moment from "moment"; // Import moment.js for date/time formatting
-import { useSelector } from "react-redux"; // Import useSelector
+import moment from "moment";
+import { useSelector } from "react-redux";
 import CustomPicker from "@/components/CustomPicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SERVER_URI } from "../../utils/uri";
@@ -36,6 +39,7 @@ const Request = () => {
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [currentUser, setCurrentUser] = useState([]);
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   const userEmail = useSelector((state) => state.auth.user?.email); // Get email from Redux
   const userLogin = useSelector((state) => state.auth.user);
@@ -154,148 +158,153 @@ const Request = () => {
       }).length;
     }
   };
-
   const renderLeaveRequest = ({ item }) => {
     return (
-      <View className="bg-white rounded-[20px] p-[15px]  shadow-md mt-[10px]">
-        {/* Container styles */}
-        <View className="flex-row justify-between items-center mb-2">
-          {/* Header styles */}
-          <Text
-            className=" text-[14px] text-[#333434]"
-            style={{
-              fontFamily: fonts["BeVietNam-Medium"],
-            }}
-          >
-            {/* Title styles */}
-            Loại: <Text>{item.type}</Text>
-          </Text>
-          <View
-            className={`px-2 py-1 rounded-full text-white 
-                      ${
-                        item.status === "Completed"
-                          ? "bg-green-50"
-                          : item.status === "Ignored"
-                          ? "bg-red-50"
-                          : item.status === "Pending"
-                          ? "bg-yellow-50"
-                          : item.status === "Approved"
-                          ? "bg-blue-50"
-                          : item.status === "Rejected"
-                          ? "bg-gray-50"
-                          : item.status === "Canceled"
-                          ? "bg-orange-50"
-                          : ""
-                      }`} // Dynamic status badge styles
-          >
+      <TouchableOpacity
+        onPress={() => {
+          setSelectedRequest(item);
+        }}
+      >
+        <View className="bg-white rounded-[20px] p-[15px]  shadow-md mt-[10px]">
+          {/* Container styles */}
+          <View className="flex-row justify-between items-center mb-2">
+            {/* Header styles */}
             <Text
-              className={`${
-                item.status === "Completed"
-                  ? "text-green-400"
-                  : item.status === "Ignored"
-                  ? "text-red-400"
-                  : item.status === "Pending"
-                  ? "text-yellow-400"
-                  : item.status === "Approved"
-                  ? "text-blue-400"
-                  : item.status === "Rejected"
-                  ? "text-gray-400"
-                  : item.status === "Canceled"
-                  ? "text-orange-400"
-                  : ""
-              }`}
+              className=" text-[14px] text-[#333434]"
               style={{
-                fontFamily: fonts["BeVietNamPro-SemiBold"],
-                fontSize: 12,
+                fontFamily: fonts["BeVietNam-Medium"],
               }}
             >
-              {item.status}
+              {/* Title styles */}
+              Loại: <Text>{item.type}</Text>
             </Text>
+            <View
+              className={`px-2 py-1 rounded-full text-white 
+                        ${
+                          item.status === "Completed"
+                            ? "bg-green-50"
+                            : item.status === "Ignored"
+                            ? "bg-red-50"
+                            : item.status === "Pending"
+                            ? "bg-yellow-50"
+                            : item.status === "Approved"
+                            ? "bg-blue-50"
+                            : item.status === "Rejected"
+                            ? "bg-gray-50"
+                            : item.status === "Canceled"
+                            ? "bg-orange-50"
+                            : ""
+                        }`} // Dynamic status badge styles
+            >
+              <Text
+                className={`${
+                  item.status === "Completed"
+                    ? "text-green-400"
+                    : item.status === "Ignored"
+                    ? "text-red-400"
+                    : item.status === "Pending"
+                    ? "text-yellow-400"
+                    : item.status === "Approved"
+                    ? "text-blue-400"
+                    : item.status === "Rejected"
+                    ? "text-gray-400"
+                    : item.status === "Canceled"
+                    ? "text-orange-400"
+                    : ""
+                }`}
+                style={{
+                  fontFamily: fonts["BeVietNamPro-SemiBold"],
+                  fontSize: 12,
+                }}
+              >
+                {item.status}
+              </Text>
+            </View>
           </View>
-        </View>
-        {/* Table */}
-        <View className="mt-[10px]">
-          <View className="flex-row justify-between  py-2">
-            {/* Header row styles */}
-            <Text
-              className=" text-[#9098B1] w-1/4 text-center"
-              style={{
-                fontFamily: fonts["BeVietNamPro-Regular"],
-                fontSize: 12,
-              }}
-            >
-              TG tạo
-            </Text>
-            <Text
-              className=" text-[#9098B1] w-1/4 text-center"
-              style={{
-                fontFamily: fonts["BeVietNamPro-Regular"],
-                fontSize: 12,
-              }}
-            >
-              Ngày
-            </Text>
-            <Text
-              className=" text-[#9098B1] w-1/4 text-center"
-              style={{
-                fontFamily: fonts["BeVietNamPro-Regular"],
-                fontSize: 12,
-              }}
-            >
-              Thời gian
-            </Text>
-            <Text
-              className=" text-[#9098B1] w-1/4 text-center"
-              style={{
-                fontFamily: fonts["BeVietNamPro-Regular"],
-                fontSize: 12,
-              }}
-            >
-              Lý do
-            </Text>
-          </View>
+          {/* Table */}
+          <View className="mt-[10px]">
+            <View className="flex-row justify-between  py-2">
+              {/* Header row styles */}
+              <Text
+                className=" text-[#9098B1] w-1/4 text-center"
+                style={{
+                  fontFamily: fonts["BeVietNamPro-Regular"],
+                  fontSize: 12,
+                }}
+              >
+                TG tạo
+              </Text>
+              <Text
+                className=" text-[#9098B1] w-1/4 text-center"
+                style={{
+                  fontFamily: fonts["BeVietNamPro-Regular"],
+                  fontSize: 12,
+                }}
+              >
+                Ngày
+              </Text>
+              <Text
+                className=" text-[#9098B1] w-1/4 text-center"
+                style={{
+                  fontFamily: fonts["BeVietNamPro-Regular"],
+                  fontSize: 12,
+                }}
+              >
+                Thời gian
+              </Text>
+              <Text
+                className=" text-[#9098B1] w-1/4 text-center"
+                style={{
+                  fontFamily: fonts["BeVietNamPro-Regular"],
+                  fontSize: 12,
+                }}
+              >
+                Lý do
+              </Text>
+            </View>
 
-          <View className="flex-row justify-between py-2">
-            {/* Data row styles */}
-            <Text
-              className="text-gray-800 w-1/4 text-center"
-              style={{
-                fontFamily: fonts["BeVietNamPro-Regular"],
-                fontSize: 10,
-              }}
-            >
-              {moment(item.createdAt).fromNow()}
-            </Text>
-            <Text
-              className="text-gray-800 w-1/4 text-center"
-              style={{
-                fontFamily: fonts["BeVietNamPro-Regular"],
-                fontSize: 10,
-              }}
-            >
-              {moment(item.requestDate).format("DD/MM/YYYY")}
-            </Text>
-            <Text
-              className="text-gray-800 w-1/4 text-center"
-              style={{
-                fontFamily: fonts["BeVietNamPro-Regular"],
-                fontSize: 10,
-              }}
-            >
-              {moment(item.createdAt).format("HH:mm:ss")}
-            </Text>
-            <Text
-              className="text-gray-800 w-1/4 text-center"
-              style={{
-                fontFamily: fonts["BeVietNamPro-Regular"],
-                fontSize: 10,
-              }}
-            >
-              {item.reason}
-            </Text>
+            <View className="flex-row justify-between py-2">
+              {/* Data row styles */}
+              <Text
+                className="text-gray-800 w-1/4 text-center"
+                style={{
+                  fontFamily: fonts["BeVietNamPro-Regular"],
+                  fontSize: 10,
+                }}
+              >
+                {moment(item.createdAt).fromNow()}
+              </Text>
+              <Text
+                className="text-gray-800 w-1/4 text-center"
+                style={{
+                  fontFamily: fonts["BeVietNamPro-Regular"],
+                  fontSize: 10,
+                }}
+              >
+                {moment(item.requestDate).format("DD/MM/YYYY")}
+              </Text>
+              <Text
+                className="text-gray-800 w-1/4 text-center"
+                style={{
+                  fontFamily: fonts["BeVietNamPro-Regular"],
+                  fontSize: 10,
+                }}
+              >
+                {moment(item.createdAt).format("HH:mm:ss")}
+              </Text>
+              <Text
+                className="text-gray-800 w-1/4 text-center"
+                style={{
+                  fontFamily: fonts["BeVietNamPro-Regular"],
+                  fontSize: 10,
+                }}
+              >
+                {item.reason}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -315,6 +324,118 @@ const Request = () => {
       (selectedStatus === "All" || req.status === selectedStatus)
     );
   });
+  const RequestDetailModal = ({ visible, request, user, onClose }) => {
+    if (!visible) {
+      return null;
+    }
+
+    if (!request) {
+      return (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Loading />
+        </View>
+      );
+    }
+
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={visible}
+        onRequestClose={onClose}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <View style={styles.headerContainer}>
+              <TouchableOpacity
+                onPress={onClose}
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  borderRadius: 50,
+                  padding: 8,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+              <Text style={styles.modalHeaderText}>Request Details</Text>
+            </View>
+
+            <ScrollView
+              contentContainerStyle={{
+                paddingHorizontal: 10,
+                paddingVertical: 20,
+              }}
+            >
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Request ID:</Text>
+                <Text style={styles.value}>{request._id}</Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>User:</Text>
+                <Text style={styles.value}>{request.userId.name}</Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Loại:</Text>
+                <Text style={styles.value}>{request.type}</Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Request Date:</Text>
+                <Text style={styles.value}>
+                  {moment(request.requestDate).format("DD/MM/YYYY")}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Request Time:</Text>
+                <Text style={styles.value}>
+                  {moment(request.createdAt).format("HH:mm:ss")}
+                </Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Lý do:</Text>
+                <Text style={styles.value}>{request.reason}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Trạng thái:</Text>
+                <Text style={styles.value}>{request.status}</Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.label}>Absent Type:</Text>
+                <Text style={styles.value}>{request.absentType}</Text>
+              </View>
+
+              {/* Additional details as needed */}
+            </ScrollView>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-evenly",
+                width: "100%",
+                paddingVertical: 10,
+              }}
+            >
+              <TouchableOpacity style={[styles.button, styles.buttonApprove]}>
+                <Text style={styles.textStyle}>Phê duyệt</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.button, styles.buttonReject]}>
+                <Text style={styles.textStyle}>Từ chối</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
 
   return (
     <KeyboardAvoidingView
@@ -378,7 +499,7 @@ const Request = () => {
         <View className="pr-[40px] w-[360px] h-[40px] mb-[18px] mt-[18px] justify-center">
           <View className="flex-row justify-between mb-4">
             <View className="flex-1 mr-2 ">
-              <CustomPicker
+              {/* <CustomPicker
                 items={departments}
                 selectedValue={selectedDepartment}
                 onValueChange={setSelectedDepartment}
@@ -388,7 +509,12 @@ const Request = () => {
                 name="keyboard-arrow-down"
                 size={8}
                 color="#94A3B8"
-              />
+              /> */}
+              <View className="bg-white border border-[#CBD5E1] rounded-[6px] h-[40px]">
+                <Text className="align-center  justify-center left-[45px] top-[9px]">
+                  {userLogin.role.name}
+                </Text>
+              </View>
             </View>
             <View className="flex-1 flex-row items-center justify-between pb-[12px]  ">
               <View>
@@ -448,13 +574,20 @@ const Request = () => {
         <FlatList
           data={filteredLeaveRequests}
           renderItem={renderLeaveRequest}
-          keyExtractor={(item) => item._id} // Use _id from database as key
+          keyExtractor={(item) => item._id}
           style={{
             marginBottom: 100,
           }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
+        />
+
+        <RequestDetailModal
+          visible={selectedRequest !== null}
+          request={selectedRequest}
+          user={userLogin}
+          onClose={() => setSelectedRequest(null)}
         />
       </View>
       <TouchableOpacity
@@ -477,5 +610,77 @@ const Request = () => {
     </KeyboardAvoidingView>
   );
 };
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 25,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: "90%",
+    maxHeight: "80%",
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  modalHeaderText: {
+    fontFamily: fonts["BeVietNamPro-SemiBold"],
+    fontSize: 20,
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 10,
+  },
+  label: {
+    fontFamily: fonts["BeVietNamPro-Regular"],
+    fontSize: 14,
+    width: 100,
+    color: "#737373",
+  },
+  value: {
+    fontFamily: fonts["BeVietNamPro-Regular"],
+    fontSize: 14,
+    flex: 1, // Allow value to wrap if needed
+  },
+  button: {
+    borderRadius: 5,
+    padding: 10,
+    elevation: 2,
+    alignItems: "center",
+  },
+  buttonApprove: {
+    backgroundColor: "#2196F3",
+  },
+  buttonReject: {
+    backgroundColor: "#f44336",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+});
 
 export default Request;

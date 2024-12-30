@@ -22,164 +22,163 @@ import { router } from "expo-router";
 import { useSelector } from "react-redux";
 import moment from "moment";
 export default function CreateRequestScreen() {
+  // Khai báo navigation để điều hướng màn hình
   const navigation = useNavigation();
 
-  const [loai, setLoai] = useState("Đi muộn");
-  const [thoiGian, setThoiGian] = useState(new Date());
-  const [ngayXinPhep, setNgayXinPhep] = useState(new Date());
-  const [lyDo, setLyDo] = useState("");
-  const [thoiGianVangMat, setThoiGianVangMat] = useState("60");
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [thoiGianXinNghi, setThoiGianXinNghi] = useState("Cả ngày");
+  // Các state quản lý dữ liệu nhập liệu
+  const [requestType, setRequestType] = useState("Đi muộn"); // Loại yêu cầu (Đi muộn, Về sớm, Xin nghỉ, Ra ngoài)
+  const [requestTime, setRequestTime] = useState(new Date()); // Thời gian yêu cầu (giờ, phút)
+  const [requestDate, setRequestDate] = useState(new Date()); // Ngày yêu cầu
+  const [reason, setReason] = useState(""); // Lý do yêu cầu
+  const [goingOutMinutes, setGoingOutMinutes] = useState("60"); // Thời gian vắng mặt (phút, chỉ dùng khi loại yêu cầu là "Ra ngoài")
+  const [showTimePicker, setShowTimePicker] = useState(false); // Trạng thái hiển thị bộ chọn thời gian
+  const [showDatePicker, setShowDatePicker] = useState(false); // Trạng thái hiển thị bộ chọn ngày
+  const [absentType, setAbsentType] = useState("Cả ngày"); // Loại xin nghỉ (Cả ngày, Buổi sáng, Buổi chiều)
 
-  const [approvableUsers, setApprovableUsers] = useState([]);
-  const [approvableFullName, setApprovableFullName] = useState([]);
+  // Các state quản lý dữ liệu người duyệt
+  const [approvableUsers, setApprovableUsers] = useState([]); // Danh sách ID người có thể duyệt
+  const [approvableFullNames, setApprovableFullNames] = useState([]); // Danh sách tên đầy đủ người có thể duyệt
+
+  // Lấy thông tin người dùng từ Redux store
   const userLogin = useSelector((state) => state.auth.user);
   const userId = userLogin._id;
   const departmentName = userLogin.department.name;
-  console.log(departmentName);
-  const onChangeTime = (event, selectedDate) => {
-    setShowTimePicker(false);
+
+  // Hàm xử lý khi thay đổi thời gian
+  const handleTimeChange = (event, selectedDate) => {
+    setShowTimePicker(false); // Ẩn bộ chọn thời gian
     if (selectedDate) {
-      setThoiGian(selectedDate);
+      setRequestTime(selectedDate);
     }
   };
-  const getApprovableUsersId = async () => {
+
+  // Hàm lấy danh sách người duyệt
+  const fetchApprovableUsers = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
       const response = await axios.get(
-        `https://erpapi.folinas.com/api/v1/users/approvable-users?roleName=Developer`,
+        `https://erpapi.folinas.com/api/v1/users/approvable-users?roleName=${departmentName}`,
         {
-          header: {
-            Authorization: `Bearer ${token}`,
+          headers: {
+            Authorization: `Bearer ${token}`, // Thêm token vào header
           },
         }
       );
       if (response?.data?.success) {
-        const approvableUserIds = response.data.data.map((user) => user._id);
-        setApprovableUsers(approvableUserIds);
-        const approvableUserName = response.data.data.map(
-          (user) => user.fullName
-        );
-        setApprovableFullName(approvableUserName);
+        const { data } = response.data; // Destructure data từ response
+        const userIds = data.map((user) => user._id); // Lấy danh sách ID
+        const fullNames = data.map((user) => user.fullName); // Lấy danh sách tên đầy đủ
+        setApprovableUsers(userIds);
+        setApprovableFullNames(fullNames);
       } else {
-        console.error("Failed to fetch approvable users", response.data);
-        Alert.alert("Error", "Failed to fetch approvable users");
+        Alert.alert("Error", "Failed to fetch approvable users"); // Thông báo lỗi nếu fetch thất bại
       }
     } catch (error) {
-      console.log(error);
-      Alert.alert("Error", "Error fetching approvable users");
+      console.error("Error fetching approvable users:", error);
+      Alert.alert("Error", "Error fetching approvable users"); // Thông báo lỗi nếu có lỗi xảy ra
     }
   };
+
+  // Gọi fetchApprovableUsers khi component được mount
   useEffect(() => {
-    getApprovableUsersId();
+    fetchApprovableUsers();
   }, []);
-  console.log("approvableUsers", approvableUsers);
 
-  const onChangeDate = (event, selectedDate) => {
-    setShowDatePicker(false);
+  // Hàm xử lý khi thay đổi ngày
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false); // Ẩn bộ chọn ngày
     if (selectedDate) {
-      setNgayXinPhep(selectedDate);
+      setRequestDate(selectedDate);
     }
   };
+  // Hàm kiểm tra xem thời gian đi muộn có hợp lệ không
+  const validateLateArrival = () => {
+    const hours = requestTime.getHours();
+    const minutes = requestTime.getMinutes();
+    if (hours > 8 || (hours === 8 && minutes >= 20)) {
+      Alert.alert(
+        "Lỗi",
+        "Thời gian đi muộn không được quá 8 giờ 20 phút sáng."
+      );
+      return false;
+    }
+    return true;
+  };
 
+  // Hàm xử lý khi submit form
   const handleSubmit = async () => {
-    // Validation logic here (similar to previous responses)
-    //validate lý do
-    if (!lyDo) {
-      alert("Vui lòng nhập lý do!");
+    // Validate dữ liệu nhập vào
+    if (!reason) {
+      Alert.alert("Lỗi", "Vui lòng nhập lý do!");
       return;
     }
-    //validate thời gian
-    if (!thoiGian) {
-      alert("Vui lòng nhập thời gian!");
+    if (!requestTime) {
+      Alert.alert("Lỗi", "Vui lòng nhập thời gian!");
       return;
     }
-    //validate ngày xin phép
-    if (!ngayXinPhep) {
-      alert("Vui lòng nhập ngày xin phép!");
+    if (!requestDate) {
+      Alert.alert("Lỗi", "Vui lòng nhập ngày xin phép!");
       return;
     }
-    //validate loại
-    if (!loai) {
-      alert("Vui lòng nhập loại!");
+    if (!requestType) {
+      Alert.alert("Lỗi", "Vui lòng nhập loại!");
       return;
     }
-    //condition loại = Đi muộn
-    if (loai === "Late Arrival") {
-      const hours = thoiGian.getHours();
-      const minutes = thoiGian.getMinutes();
-
-      if (hours >= 8) {
-        if (hours === 8 && minutes < 20) return; // Specifically allows 8:00-8:19
-        alert("Thời gian đi muộn không được quá 8 giờ 20 phút sáng");
-        return;
-      }
+    // Kiểm tra thời gian đi muộn nếu loại yêu cầu là "Đi muộn"
+    if (requestType === "Đi muộn" && !validateLateArrival()) {
+      return;
     }
-    //translate from Vietnamese to English
-    const TypeMapping = {
+    // Mapping loại yêu cầu từ tiếng Việt sang tiếng Anh
+    const typeMapping = {
       "Đi muộn": "Late Arrival",
       "Về sớm": "Early Leave",
       "Xin nghỉ": "Absent",
       "Ra ngoài": "Going Out",
     };
+
     const absentTypeMapping = {
       "Cả ngày": "Day",
       "Buổi sáng": "Half Day Morning",
       "Buổi chiều": "Half Day Afternoon",
     };
-    const translatedType = TypeMapping[loai] || loai;
+
+    const translatedType = typeMapping[requestType] || requestType;
     const translatedAbsentType =
-      loai === "Xin nghỉ" ? absentTypeMapping[thoiGianXinNghi] : null;
-    //condition loại = Ra Ngoài
-    let thoiGianVangMatToSend = null; // giữ nguyên giá trị nếu type là "Ra Ngoài"
-    if (translatedType === "Going Out") {
-      thoiGianVangMatToSend = parseInt(thoiGianVangMat, 10);
-    }
-    //condition loại = Xin nghỉ
-    let timeToSend = thoiGian;
+      requestType === "Xin nghỉ" ? absentTypeMapping[absentType] : null;
+
+    let timeToSend = null;
     let timeOfDayToSend = null;
-    if (translatedType === "Absent") {
-      timeToSend = null;
-      timeOfDayToSend = translatedAbsentType;
+    let goingOutMinutesToSend = null;
+
+    if (translatedType === "Going Out") {
+      goingOutMinutesToSend = parseInt(goingOutMinutes, 10);
     }
-    console.log(
-      "userId:",
-      userId,
-      "type:",
-      translatedType,
-      "requestTime:",
-      timeToSend,
-      "requestDate:",
-      ngayXinPhep,
-      "reason:",
-      lyDo,
-      "goingOutMinutes:",
-      thoiGianVangMatToSend,
-      "absentType:",
-      timeOfDayToSend,
-      "approvableUserIds:",
-      approvableUsers
-    );
-    const approvableUserIds = approvableUsers;
+    if (translatedType === "Absent") {
+      timeOfDayToSend = translatedAbsentType;
+    } else {
+      timeToSend = requestTime;
+    }
+
     const now = moment().toISOString();
+
+    const requestData = {
+      type: translatedType,
+      requestTime: timeToSend,
+      requestDate: requestDate,
+      reason: reason,
+      from: now,
+      to: now,
+      goingOutMinutes: goingOutMinutesToSend,
+      absentType: timeOfDayToSend,
+      approvableUserIds: approvableUsers,
+    };
+    console.log("Request Data:", requestData);
 
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await axios.post(
         "https://erpapi.folinas.com/api/v1/checkInRequests",
-        {
-          type: translatedType,
-          requestTime: timeToSend,
-          requestDate: ngayXinPhep,
-          reason: lyDo,
-          from: now,
-          to: now,
-          goingOutMinutes: thoiGianVangMatToSend, // include thoiGianVangMat
-          absentType: timeOfDayToSend, // Send the time of day
-          approvableUserIds,
-        },
+        requestData,
         {
           headers: {
             "Content-Type": "application/json",
@@ -187,19 +186,17 @@ export default function CreateRequestScreen() {
           },
         }
       );
-
       if (response.data.status === "ok") {
-        alert("Đã tạo đơn thành công!");
+        Alert.alert("Thành công", "Đã tạo đơn thành công!");
         console.log("Leave request created successfully:", response.data.data);
-        navigation.goBack(); // Navigate back to the request screen after successful submission.
+        navigation.goBack();
       } else {
-        console.error("Error creating leave request:", response.data.data);
-        // handle error, maybe show alert to user.
+        Alert.alert("Lỗi", "Có lỗi xảy ra khi tạo đơn!");
+        console.error("Error creating leave request:", response.data);
       }
     } catch (error) {
       console.error("Error creating request:", error);
-      // handle error, maybe show alert to user
-      Alert.alert("Error", "Something went wrong");
+      Alert.alert("Lỗi", "Có lỗi xảy ra, vui lòng thử lại sau!");
     }
   };
 
@@ -266,14 +263,14 @@ export default function CreateRequestScreen() {
             </Text>
             <CustomPicker
               items={["Đi muộn", "Về sớm", "Xin nghỉ", "Ra ngoài"]}
-              selectedValue={loai}
-              onValueChange={(value) => setLoai(value)}
+              selectedValue={requestType}
+              onValueChange={(value) => setRequestType(value)}
               placeholder="Chọn loại"
               className="w-[360px]"
             />
           </View>
           {/* //UI loại = Ra ngoài */}
-          {loai === "Ra ngoài" && (
+          {requestType === "Ra ngoài" && (
             <View className="mb-4 ">
               <Text
                 className="mb-1 font-bold"
@@ -286,14 +283,14 @@ export default function CreateRequestScreen() {
               </Text>
               <CustomPicker
                 items={["60", "120"]}
-                selectedValue={thoiGianVangMat}
-                onValueChange={(value) => setThoiGianVangMat(value)}
+                selectedValue={goingOutMinutes}
+                onValueChange={(value) => setGoingOutMinutes(value)}
                 placeholder="Chọn thời gian"
               />
             </View>
           )}
           {/* //UI loại = Xin Nghỉ: Thời gian xin nghỉ */}
-          {loai === "Xin nghỉ" && (
+          {requestType === "Xin nghỉ" && (
             <View className="mb-4 w-[360px]">
               <Text
                 className="mb-1 font-bold"
@@ -306,14 +303,14 @@ export default function CreateRequestScreen() {
               </Text>
               <CustomPicker
                 items={["Buổi sáng", "Buổi chiều", "Cả ngày"]}
-                selectedValue={thoiGianXinNghi}
-                onValueChange={(value) => setThoiGianXinNghi(value)}
+                selectedValue={absentType}
+                onValueChange={(value) => setAbsentType(value)}
                 placeholder="Chọn giờ nghỉ"
               />
             </View>
           )}
           {/* //UI loại khác xin nghỉ : Thời gian */}
-          {loai !== "Xin nghỉ" && (
+          {requestType !== "Xin nghỉ" && (
             <View className="mb-4 w-[360px]">
               <Text
                 className="mb-1 font-bold"
@@ -329,7 +326,7 @@ export default function CreateRequestScreen() {
                 className="border border-gray-300 rounded p-2"
               >
                 <Text>
-                  {thoiGian.toLocaleTimeString([], {
+                  {requestTime.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
@@ -338,11 +335,11 @@ export default function CreateRequestScreen() {
 
               {showTimePicker && (
                 <DateTimePicker
-                  value={thoiGian}
+                  value={requestTime}
                   mode="time"
                   is24Hour={true}
                   display="default"
-                  onChange={onChangeTime}
+                  onChange={handleTimeChange}
                 />
               )}
             </View>
@@ -362,14 +359,14 @@ export default function CreateRequestScreen() {
               onPress={() => setShowDatePicker(true)}
               className="border border-gray-300 rounded p-2 w-[360px]"
             >
-              <Text>{ngayXinPhep.toLocaleDateString()}</Text>
+              <Text>{requestDate.toLocaleDateString()}</Text>
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
-                value={ngayXinPhep}
+                value={requestDate}
                 mode="date"
                 display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={onChangeDate}
+                onChange={handleDateChange}
                 minimumDate={new Date()} // Set minimum date to today
               />
             )}
@@ -388,8 +385,8 @@ export default function CreateRequestScreen() {
             <TextInput
               multiline
               placeholder="Type your message here"
-              value={lyDo}
-              onChangeText={setLyDo}
+              value={reason}
+              onChangeText={setReason}
               className="border border-gray-300 rounded p-2 h-24 w-[360px]"
               style={{
                 fontFamily: fonts["Inter-Medium"],
@@ -416,7 +413,7 @@ export default function CreateRequestScreen() {
                   paddingTop: 3,
                 }}
               >
-                {approvableFullName}
+                {approvableFullNames.join(", ")}
               </Text>
             </View>
           </View>

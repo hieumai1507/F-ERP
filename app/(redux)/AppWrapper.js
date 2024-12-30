@@ -43,6 +43,14 @@ function AppWrapper() {
             headerBackTitle: "Back",
           }}
         />
+        <Stack.Screen
+          name="request/RequestDetailModal"
+          options={{
+            headerShown: false,
+            title: "Edit Profile",
+            headerBackTitle: "Back",
+          }}
+        />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
     </ToastProvider>
