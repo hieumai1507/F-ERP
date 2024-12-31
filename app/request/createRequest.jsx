@@ -191,7 +191,7 @@ export default function CreateRequestScreen() {
           },
         }
       );
-      if (response.data.status === "ok") {
+      if (response.data.success === true) {
         Alert.alert("Thành công", "Đã tạo đơn thành công!");
         console.log("Leave request created successfully:", response.data.data);
         navigation.goBack();
