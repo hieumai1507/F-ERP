@@ -119,8 +119,8 @@ export default function CreateRequestScreen() {
     }
 
     const typeMapping = {
-      "Đi muộn": "Late Arrival",
-      "Về sớm": "Early Leave",
+      "Đi muộn": "Late arrival",
+      "Về sớm": "Early leave",
       "Xin nghỉ": "Absent",
       "Ra ngoài": "Going Out",
     };
@@ -159,7 +159,7 @@ export default function CreateRequestScreen() {
       requestData.requestTime = timeToSend;
     }
     if (requestDate) {
-      requestData.requestDate = moment(requestDate).format("YYYY-MM-DD");
+      requestData.requestDate = moment(requestDate).toISOString();
     }
     if (reason) {
       requestData.reason = reason;
