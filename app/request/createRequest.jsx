@@ -21,77 +21,68 @@ import fonts from "@/constants/fonts";
 import { router } from "expo-router";
 import { useSelector } from "react-redux";
 import moment from "moment";
+
 export default function CreateRequestScreen() {
-  // Khai báo navigation để điều hướng màn hình
   const navigation = useNavigation();
 
-  // Các state quản lý dữ liệu nhập liệu
-  const [requestType, setRequestType] = useState("Đi muộn"); // Loại yêu cầu (Đi muộn, Về sớm, Xin nghỉ, Ra ngoài)
-  const [requestTime, setRequestTime] = useState(new Date()); // Thời gian yêu cầu (giờ, phút)
-  const [requestDate, setRequestDate] = useState(new Date()); // Ngày yêu cầu
-  const [reason, setReason] = useState(""); // Lý do yêu cầu
-  const [goingOutMinutes, setGoingOutMinutes] = useState("60"); // Thời gian vắng mặt (phút, chỉ dùng khi loại yêu cầu là "Ra ngoài")
-  const [showTimePicker, setShowTimePicker] = useState(false); // Trạng thái hiển thị bộ chọn thời gian
-  const [showDatePicker, setShowDatePicker] = useState(false); // Trạng thái hiển thị bộ chọn ngày
-  const [absentType, setAbsentType] = useState("Cả ngày"); // Loại xin nghỉ (Cả ngày, Buổi sáng, Buổi chiều)
-
-  // Các state quản lý dữ liệu người duyệt
-  const [approvableUsers, setApprovableUsers] = useState([]); // Danh sách ID người có thể duyệt
-  const [approvableFullNames, setApprovableFullNames] = useState([]); // Danh sách tên đầy đủ người có thể duyệt
-
-  // Lấy thông tin người dùng từ Redux store
+  const [requestType, setRequestType] = useState("Đi muộn");
+  const [requestTime, setRequestTime] = useState(new Date());
+  const [requestDate, setRequestDate] = useState(new Date());
+  const [reason, setReason] = useState("");
+  const [goingOutMinutes, setGoingOutMinutes] = useState("60");
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [absentType, setAbsentType] = useState("Cả ngày");
+  const [approvableUsers, setApprovableUsers] = useState([]);
+  const [approvableFullNames, setApprovableFullNames] = useState([]);
   const userLogin = useSelector((state) => state.auth.user);
   const userId = userLogin._id;
   const departmentName = userLogin.department.name;
 
-  // Hàm xử lý khi thay đổi thời gian
   const handleTimeChange = (event, selectedDate) => {
-    setShowTimePicker(false); // Ẩn bộ chọn thời gian
+    setShowTimePicker(false);
     if (selectedDate) {
       setRequestTime(selectedDate);
     }
   };
 
-  // Hàm lấy danh sách người duyệt
   const fetchApprovableUsers = async () => {
     try {
-      const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
+      const token = await AsyncStorage.getItem("token");
       const response = await axios.get(
         `https://erpapi.folinas.com/api/v1/users/approvable-users?roleName=${departmentName}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Thêm token vào header
+            Authorization: `Bearer ${token}`,
           },
         }
       );
       if (response?.data?.success) {
-        const { data } = response.data; // Destructure data từ response
-        const userIds = data.map((user) => user._id); // Lấy danh sách ID
-        const fullNames = data.map((user) => user.fullName); // Lấy danh sách tên đầy đủ
+        const { data } = response.data;
+        const userIds = data.map((user) => user._id);
+        const fullNames = data.map((user) => user.fullName);
         setApprovableUsers(userIds);
         setApprovableFullNames(fullNames);
       } else {
-        Alert.alert("Error", "Failed to fetch approvable users"); // Thông báo lỗi nếu fetch thất bại
+        Alert.alert("Error", "Failed to fetch approvable users");
       }
     } catch (error) {
       console.error("Error fetching approvable users:", error);
-      Alert.alert("Error", "Error fetching approvable users"); // Thông báo lỗi nếu có lỗi xảy ra
+      Alert.alert("Error", "Error fetching approvable users");
     }
   };
 
-  // Gọi fetchApprovableUsers khi component được mount
   useEffect(() => {
     fetchApprovableUsers();
   }, []);
 
-  // Hàm xử lý khi thay đổi ngày
   const handleDateChange = (event, selectedDate) => {
-    setShowDatePicker(false); // Ẩn bộ chọn ngày
+    setShowDatePicker(false);
     if (selectedDate) {
       setRequestDate(selectedDate);
     }
   };
-  // Hàm kiểm tra xem thời gian đi muộn có hợp lệ không
+
   const validateLateArrival = () => {
     const hours = requestTime.getHours();
     const minutes = requestTime.getMinutes();
@@ -105,9 +96,7 @@ export default function CreateRequestScreen() {
     return true;
   };
 
-  // Hàm xử lý khi submit form
   const handleSubmit = async () => {
-    // Validate dữ liệu nhập vào
     if (!reason) {
       Alert.alert("Lỗi", "Vui lòng nhập lý do!");
       return;
@@ -124,11 +113,11 @@ export default function CreateRequestScreen() {
       Alert.alert("Lỗi", "Vui lòng nhập loại!");
       return;
     }
-    // Kiểm tra thời gian đi muộn nếu loại yêu cầu là "Đi muộn"
+
     if (requestType === "Đi muộn" && !validateLateArrival()) {
       return;
     }
-    // Mapping loại yêu cầu từ tiếng Việt sang tiếng Anh
+
     const typeMapping = {
       "Đi muộn": "Late Arrival",
       "Về sớm": "Early Leave",
@@ -156,22 +145,38 @@ export default function CreateRequestScreen() {
     if (translatedType === "Absent") {
       timeOfDayToSend = translatedAbsentType;
     } else {
-      timeToSend = requestTime;
+      timeToSend = moment(requestTime).format("HH:mm");
     }
 
     const now = moment().toISOString();
 
-    const requestData = {
-      type: translatedType,
-      requestTime: timeToSend,
-      requestDate: requestDate,
-      reason: reason,
-      from: now,
-      to: now,
-      goingOutMinutes: goingOutMinutesToSend,
-      absentType: timeOfDayToSend,
-      approvableUserIds: approvableUsers,
-    };
+    const requestData = {};
+
+    if (translatedType) {
+      requestData.type = translatedType;
+    }
+    if (timeToSend) {
+      requestData.requestTime = timeToSend;
+    }
+    if (requestDate) {
+      requestData.requestDate = moment(requestDate).format("YYYY-MM-DD");
+    }
+    if (reason) {
+      requestData.reason = reason;
+    }
+
+    requestData.from = now;
+    requestData.to = now;
+
+    if (goingOutMinutesToSend) {
+      requestData.goingOutMinutes = goingOutMinutesToSend;
+    }
+    if (timeOfDayToSend) {
+      requestData.absentType = timeOfDayToSend;
+    }
+    if (approvableUsers && approvableUsers.length > 0) {
+      requestData.approvableUserIds = approvableUsers;
+    }
     console.log("Request Data:", requestData);
 
     try {
@@ -209,9 +214,9 @@ export default function CreateRequestScreen() {
       <SafeAreaView>
         <LinearGradient
           colors={["#033495", "#0654B2", "#005AB4", "#38B6FF"]}
-          locations={[0, 0.16, 0.32, 1]} // Vị trí tương ứng với phần trăm
+          locations={[0, 0.16, 0.32, 1]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }} // Hoặc điều chỉnh theo hướng gradient mong muốn
+          end={{ x: 1, y: 1 }}
           className="w-full h-[109px] justify-between flex-row items-center"
         >
           <TouchableOpacity
@@ -250,7 +255,6 @@ export default function CreateRequestScreen() {
           >
             Vui lòng điền đầy đủ và cẩn thận
           </Text>
-          {/* //UI display input loại */}
           <View className="mb-4 w-[360px]">
             <Text
               className="mb-1"
@@ -269,7 +273,6 @@ export default function CreateRequestScreen() {
               className="w-[360px]"
             />
           </View>
-          {/* //UI loại = Ra ngoài */}
           {requestType === "Ra ngoài" && (
             <View className="mb-4 ">
               <Text
@@ -289,7 +292,6 @@ export default function CreateRequestScreen() {
               />
             </View>
           )}
-          {/* //UI loại = Xin Nghỉ: Thời gian xin nghỉ */}
           {requestType === "Xin nghỉ" && (
             <View className="mb-4 w-[360px]">
               <Text
@@ -309,7 +311,6 @@ export default function CreateRequestScreen() {
               />
             </View>
           )}
-          {/* //UI loại khác xin nghỉ : Thời gian */}
           {requestType !== "Xin nghỉ" && (
             <View className="mb-4 w-[360px]">
               <Text
@@ -344,7 +345,6 @@ export default function CreateRequestScreen() {
               )}
             </View>
           )}
-          {/* UI ngày xin phép */}
           <View className="mb-4 w-[360px]">
             <Text
               className="mb-1 font-bold"
@@ -367,11 +367,10 @@ export default function CreateRequestScreen() {
                 mode="date"
                 display={Platform.OS === "ios" ? "spinner" : "default"}
                 onChange={handleDateChange}
-                minimumDate={new Date()} // Set minimum date to today
+                minimumDate={new Date()}
               />
             )}
           </View>
-          {/* UI Lý do */}
           <View className="mb-4">
             <Text
               className="mb-1 font-bold"
@@ -394,7 +393,6 @@ export default function CreateRequestScreen() {
               }}
             />
           </View>
-          {/* UI người duyệt */}
           <View className="mb-4 ">
             <Text
               className="mb-1 font-bold "
@@ -417,7 +415,6 @@ export default function CreateRequestScreen() {
               </Text>
             </View>
           </View>
-          {/* Button Submit */}
           <TouchableOpacity
             onPress={handleSubmit}
             className="bg-[#0B6CA7] rounded-[6px] py-3 w-[360px] h-[40px]"
