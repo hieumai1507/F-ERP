@@ -312,7 +312,7 @@ const Request = () => {
                   fontSize: 10,
                 }}
               >
-                {moment(item.createdAt).format("HH:mm")}
+                {item.requestTime}
               </Text>
               <Text
                 className="text-gray-800 w-1/4 text-center"
