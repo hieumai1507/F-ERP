@@ -49,8 +49,9 @@ export default function CreateRequestScreen() {
   const fetchApprovableUsers = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
+      const roleName = encodeURIComponent(userLogin.role.name); // Mã hóa giá trị roleName
       const response = await axios.get(
-        `https://erpapi.folinas.com/api/v1/users/approvable-users?roleName=${departmentName}`,
+        `https://erpapi.folinas.com/api/v1/users/approvable-users?roleName=${roleName}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
