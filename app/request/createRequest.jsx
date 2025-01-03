@@ -36,8 +36,6 @@ export default function CreateRequestScreen() {
   const [approvableUsers, setApprovableUsers] = useState([]);
   const [approvableFullNames, setApprovableFullNames] = useState([]);
   const userLogin = useSelector((state) => state.auth.user);
-  const userId = userLogin._id;
-  const departmentName = userLogin.department.name;
 
   const handleTimeChange = (event, selectedDate) => {
     setShowTimePicker(false);
