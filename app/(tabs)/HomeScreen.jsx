@@ -19,6 +19,7 @@ import Group from "@/assets/images/homeIcon/Group.png";
 import Vector from "@/assets/images/homeIcon/Vector.png";
 import Contact from "@/assets/images/homeIcon/Contact.png";
 import img from "@/assets/images/homeIcon/img.png";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Loading from "@/components/Loading";
 
 const StyledView = styled(View);
@@ -26,22 +27,150 @@ const StyledText = styled(Text);
 const StyledImageBackground = styled(ImageBackground);
 const StyledPressable = styled(Pressable);
 
-const API_URL =
-  "https://erpapi.folinas.com/api/v1/checkIns/7913Q3CMR9LKWU42/detail";
-
 const HomeScreen = (props) => {
   console.log(props);
   const user = useSelector((state) => state.auth.user);
 
-  // Lấy ngày và giờ hiện tại
-  const currentDate = new Date();
+  const [checkInTime, setCheckInTime] = useState(null);
+  const [checkOutTime, setCheckOutTime] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [formattedDate, setFormattedDate] = useState("");
 
-  // Định dạng ngày theo kiểu dd/mm/yyyy
-  const formattedDate = `${
-    currentDate.getDate() < 10 ? "0" : ""
-  }${currentDate.getDate()}/${currentDate.getMonth() + 1 < 10 ? "0" : ""}${
-    currentDate.getMonth() + 1
-  }/${currentDate.getFullYear()}`;
+  useEffect(() => {
+    const today = new Date();
+    const formattedDate = `${today.getDate()}/${
+      today.getMonth() + 1
+    }/${today.getFullYear()}`;
+    setFormattedDate(formattedDate);
+
+    const formatDateForAPI = (date) => {
+      const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      const dayOfWeek = daysOfWeek[date.getDay()];
+      const month = months[date.getMonth()];
+      return `${dayOfWeek}, ${date.getDate()} ${month} ${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} GMT`;
+    };
+
+    const fetchCheckInData = async () => {
+      setLoading(true);
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (!token) {
+          console.error("Token không tồn tại hoặc không hợp lệ.");
+          setLoading(false);
+          return;
+        }
+
+        // Lưu ngày ban đầu, tránh thay đổi đối tượng `today`
+        const startOfDay = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          0,
+          0,
+          0,
+          0
+        );
+        const endOfDay = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59,
+          999
+        );
+
+        const formattedFromDate = formatDateForAPI(startOfDay);
+        const formattedToDate = formatDateForAPI(endOfDay);
+
+        const API_URL = `https://erpapi.folinas.com/api/v1/checkIns/${user._id}/detail?from=${formattedFromDate}&to=${formattedToDate}&page=1&limit=1`;
+
+        const response = await fetch(API_URL, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Received data:", data);
+
+        if (data && data.data) {
+          // Lọc dữ liệu theo ngày đúng
+          const todayData = data.data.find((item) => {
+            // Đảm bảo rằng ngày trong item.Ngày có định dạng đúng
+            const [day, month, year] = item.Ngày.split("/").map((num) =>
+              parseInt(num)
+            );
+
+            // Chuyển item.Ngày thành đối tượng Date hợp lệ
+            const apiDate = new Date(year, month - 1, day); // month-1 vì tháng trong JavaScript bắt đầu từ 0
+
+            const [dayFormatted, monthFormatted, yearFormatted] = formattedDate
+              .split("/")
+              .map((num) => parseInt(num));
+
+            // Đảm bảo rằng bạn đang so sánh cùng định dạng ngày
+            const formattedApiDate = `${apiDate.getDate()}/${
+              apiDate.getMonth() + 1
+            }/${apiDate.getFullYear()}`;
+            console.log("Formatted date:", formattedDate);
+            console.log("API date:", formattedApiDate);
+
+            // So sánh định dạng ngày
+            return (
+              `${dayFormatted}/${monthFormatted}/${yearFormatted}` ===
+              formattedApiDate
+            );
+          });
+
+          console.log("Today data:", todayData);
+
+          if (todayData) {
+            // Trích xuất giờ vào và giờ ra
+            setCheckInTime(todayData["Giờ vào"] || "--:--");
+            setCheckOutTime(todayData["Giờ ra"] || "--:--");
+          } else {
+            setCheckInTime("--:--");
+            setCheckOutTime("--:--");
+          }
+        }
+      } catch (error) {
+        console.error("Error retrieving check-in/check-out data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCheckInData();
+  }, [formattedDate]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Loading />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView className="bg-[#F5F5F5] flex-1">
@@ -140,7 +269,7 @@ const HomeScreen = (props) => {
                   fontSize: 10,
                 }}
               >
-                --:--
+                {checkInTime ? checkInTime : "--:--"}
               </Text>
               <Text
                 style={{
@@ -149,7 +278,7 @@ const HomeScreen = (props) => {
                   fontSize: 10,
                 }}
               >
-                --:--
+                {checkOutTime ? checkOutTime : "--:--"}
               </Text>
             </View>
             <StyledText

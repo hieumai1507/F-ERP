@@ -21,29 +21,40 @@ import moment from "moment";
 import { useSelector } from "react-redux";
 import CustomPicker from "@/components/CustomPicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SERVER_URI } from "../../utils/uri";
 import fonts from "@/constants/fonts";
 import { LinearGradient } from "expo-linear-gradient";
 import Loading from "@/components/Loading";
-import { jwtDecode } from "jwt-decode";
+import { Button } from "@rneui/themed";
 
 const Request = () => {
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [fromDate, setFromDate] = useState(new Date());
-  const [toDate, setToDate] = useState(new Date());
-  const [showFromPicker, setShowFromPicker] = useState(false);
-  const [showToPicker, setShowToPicker] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(moment()); // Changed to moment object
+  const [showMonthPicker, setShowMonthPicker] = useState(false); // State for showing month picker
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [currentUser, setCurrentUser] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
+  const [showMyRequests, setShowMyRequests] = useState(true); // Track selected button
+
   const userEmail = useSelector((state) => state.auth.user?.email); // Get email from Redux
   const userLogin = useSelector((state) => state.auth.user);
   const userId = userLogin._id;
+
+  const generateLastSixMonths = () => {
+    const now = moment();
+    const months = [];
+    for (let i = 0; i < 6; i++) {
+      months.push(now.clone().subtract(i, "months"));
+    }
+    return months;
+  };
+
+  const lastSixMonths = generateLastSixMonths();
+  const monthStrings = lastSixMonths.map((month) => month.format("MMMM YYYY")); // Array of formatted strings
 
   useEffect(() => {
     // Set your department list here
@@ -140,20 +151,20 @@ const Request = () => {
   };
 
   const getStatusCount = (status) => {
+    const startOfMonth = selectedMonth.clone().startOf("month");
+    const endOfMonth = selectedMonth.clone().endOf("month");
+
     if (status === "All") {
       return currentUser.filter((req) => {
-        // Count ALL within date range
-        const requestDate = new Date(req.requestDate);
-        return requestDate >= fromDate && requestDate <= toDate;
+        const requestDate = moment(req.requestDate);
+        return requestDate.isBetween(startOfMonth, endOfMonth, null, "[]"); // [] includes start and end date
       }).length;
     } else {
       return currentUser.filter((req) => {
-        // Count specific status within date range
-        const requestDate = new Date(req.requestDate);
+        const requestDate = moment(req.requestDate);
         return (
           req.status === status &&
-          requestDate >= fromDate &&
-          requestDate <= toDate
+          requestDate.isBetween(startOfMonth, endOfMonth, null, "[]")
         );
       }).length;
     }
@@ -165,7 +176,7 @@ const Request = () => {
           setSelectedRequest(item);
         }}
       >
-        <View className="bg-white rounded-[20px] p-[15px]  shadow-md mt-[10px]">
+        <View className="bg-white rounded-[20px] p-[15px]  shadow-md mt-[10px]  h-[114px] ">
           {/* Container styles */}
           <View className="flex-row justify-between items-center mb-2">
             {/* Header styles */}
@@ -223,7 +234,7 @@ const Request = () => {
           </View>
           {/* Table */}
           <View className="mt-[10px]">
-            <View className="flex-row justify-between  py-2">
+            <View className="flex-row justify-between  ">
               {/* Header row styles */}
               <Text
                 className=" text-[#9098B1] w-1/4 text-center"
@@ -265,15 +276,26 @@ const Request = () => {
 
             <View className="flex-row justify-between py-2">
               {/* Data row styles */}
-              <Text
-                className="text-gray-800 w-1/4 text-center"
-                style={{
-                  fontFamily: fonts["BeVietNamPro-Regular"],
-                  fontSize: 10,
-                }}
-              >
-                {moment(item.createdAt).fromNow()}
-              </Text>
+              <View className="w-1/4 items-center">
+                <Text
+                  className="text-gray-800 text-center"
+                  style={{
+                    fontFamily: fonts["BeVietNamPro-Regular"],
+                    fontSize: 10,
+                  }}
+                >
+                  {moment(item.createdAt).format("DD/MM/YY")}
+                </Text>
+                <Text
+                  className="text-gray-800  text-center"
+                  style={{
+                    fontFamily: fonts["BeVietNamPro-Regular"],
+                    fontSize: 10,
+                  }}
+                >
+                  {moment(item.createdAt).format("HH:mm")}
+                </Text>
+              </View>
               <Text
                 className="text-gray-800 w-1/4 text-center"
                 style={{
@@ -290,7 +312,7 @@ const Request = () => {
                   fontSize: 10,
                 }}
               >
-                {moment(item.createdAt).format("HH:mm:ss")}
+                {moment(item.createdAt).format("HH:mm")}
               </Text>
               <Text
                 className="text-gray-800 w-1/4 text-center"
@@ -316,14 +338,21 @@ const Request = () => {
     );
   }
 
+  // Filter requests based on the selected month
   const filteredLeaveRequests = currentUser.filter((req) => {
-    const requestDate = new Date(req.requestDate);
+    const startOfMonth = selectedMonth.clone().startOf("month");
+    const endOfMonth = selectedMonth.clone().endOf("month");
+    const requestDate = moment(req.requestDate);
     return (
-      requestDate >= fromDate &&
-      requestDate <= toDate &&
+      requestDate.isBetween(startOfMonth, endOfMonth, null, "[]") &&
       (selectedStatus === "All" || req.status === selectedStatus)
     );
   });
+
+  const displayedRequests = showMyRequests
+    ? filteredLeaveRequests
+    : leaveRequests.filter((request) => request.status === "Pending");
+
   const RequestDetailModal = ({ visible, request, user, onClose }) => {
     if (!visible) {
       return null;
@@ -471,9 +500,9 @@ const Request = () => {
           </Text>
         </LinearGradient>
       </SafeAreaView>
-
+      {/*  */}
       <View className="flex-1 bg-[#F5F5F5] p-4">
-        <View className="flex-row flex-wrap justify-between mb-4">
+        <View className="flex-row flex-wrap justify-between mb-4 bg-[#FFFFFF] rounded-lg">
           {[
             "All",
             "Pending",
@@ -485,7 +514,7 @@ const Request = () => {
             <TouchableOpacity
               key={status}
               onPress={() => setSelectedStatus(status)}
-              className={`w-[112px] h-[32px] rounded-lg border border-gray-300 mr-1 items-center justify-center  ${
+              className={`w-[112px] h-[32px] rounded-lg   mr-1 items-center justify-center  ${
                 selectedStatus === status ? "bg-[#F1F5F9]" : "bg-[#FFFFFF]"
               }`}
             >
@@ -496,9 +525,9 @@ const Request = () => {
           ))}
         </View>
 
-        <View className="pr-[40px] w-[360px] h-[40px] mb-[18px] mt-[18px] justify-center">
-          <View className="flex-row justify-between mb-4">
-            <View className="flex-1 mr-2 ">
+        <View className="pr-[12px]">
+          <View className="flex-row mb-4">
+            <View className="flex-1">
               {/* <CustomPicker
                 items={departments}
                 selectedValue={selectedDepartment}
@@ -510,52 +539,25 @@ const Request = () => {
                 size={8}
                 color="#94A3B8"
               /> */}
-              <View className="bg-white border border-[#CBD5E1] rounded-[6px] h-[40px]">
-                <Text className="align-center  justify-center left-[45px] top-[9px]">
+              <View className="bg-white border border-[#CBD5E1] rounded-[6px] h-[40px] w-[130px]">
+                <Text className="top-[10px] ml-[25px]">
                   {userLogin.role.name}
                 </Text>
               </View>
             </View>
-            <View className="flex-1 flex-row items-center justify-between pb-[12px]  ">
-              <View>
-                <TouchableOpacity
-                  onPress={() => setShowFromPicker(true)}
-                  className="bg-white border h-[40px] justify-center border-[#CBD5E1] rounded-[6px] px-2 py-1"
-                >
-                  <Text>{fromDate.toLocaleDateString()}</Text>
-                </TouchableOpacity>
-                {showFromPicker && (
-                  <DateTimePicker
-                    value={fromDate}
-                    mode="date"
-                    display="default"
-                    onChange={(event, selectedDate) => {
-                      setShowFromPicker(false);
-                      if (selectedDate) setFromDate(selectedDate);
-                    }}
-                  />
-                )}
-              </View>
-              <Text className="mx-2">-</Text>
-              <View>
-                <TouchableOpacity
-                  onPress={() => setShowToPicker(true)}
-                  className="bg-white h-[40px] justify-center border border-[#CBD5E1] rounded-[6px] px-2 py-1"
-                >
-                  <Text>{toDate.toLocaleDateString()}</Text>
-                </TouchableOpacity>
-                {showToPicker && (
-                  <DateTimePicker
-                    value={toDate}
-                    mode="date"
-                    display="default"
-                    onChange={(event, selectedDate) => {
-                      setShowToPicker(false);
-                      if (selectedDate) setToDate(selectedDate);
-                    }}
-                  />
-                )}
-              </View>
+            <View className="flex-1 w-[219px] h-[40px]">
+              <CustomPicker
+                items={monthStrings}
+                selectedValue={selectedMonth.format("MMMM YYYY")}
+                onValueChange={(monthString) => {
+                  const selectedMonthObject = lastSixMonths.find(
+                    (month) => month.format("MMMM YYYY") === monthString
+                  );
+                  setSelectedMonth(selectedMonthObject || moment());
+                }}
+                placeholder="Select Month"
+                className="mb-2"
+              />
             </View>
           </View>
         </View>
@@ -571,11 +573,56 @@ const Request = () => {
             Danh sách Xin phép
           </Text>
         </View>
+        {/* <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-around",
+            marginBottom: 10,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => {
+              setShowMyRequests(true);
+            }}
+            style={[
+              styles.filterButton,
+              showMyRequests && styles.filterButtonActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.filterButtonText,
+                showMyRequests && styles.filterButtonTextActive,
+              ]}
+            >
+              Của tôi
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setShowMyRequests(false);
+            }}
+            style={[
+              styles.filterButton,
+              !showMyRequests && styles.filterButtonActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.filterButtonText,
+                !showMyRequests && styles.filterButtonTextActive,
+              ]}
+            >
+              Cần duyệt
+            </Text>
+          </TouchableOpacity>
+        </View> */}
         <FlatList
-          data={filteredLeaveRequests}
+          data={displayedRequests}
           renderItem={renderLeaveRequest}
           keyExtractor={(item) => item._id}
           style={{
+            marginTop: 20,
             marginBottom: 100,
           }}
           refreshControl={
@@ -680,6 +727,39 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
+  },
+  pickerContainer: {
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    borderRadius: 6,
+    height: 40,
+    justifyContent: "center",
+  },
+  pickerText: {
+    fontFamily: fonts["BeVietNamPro-Regular"],
+    fontSize: 14,
+    paddingHorizontal: 10,
+    color: "#333434",
+  },
+  filterButton: {
+    padding: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    backgroundColor: "white",
+  },
+  filterButtonActive: {
+    backgroundColor: "#F1F5F9",
+  },
+  filterButtonText: {
+    color: "#333434",
+    fontFamily: fonts["BeVietNamPro-Regular"],
+    fontSize: 14,
+  },
+  filterButtonTextActive: {
+    fontFamily: fonts["BeVietNamPro-Regular"],
+    fontSize: 14,
   },
 });
 

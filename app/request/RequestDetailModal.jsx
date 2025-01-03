@@ -17,12 +17,11 @@ import Loading from "@/components/Loading";
 const RequestDetailModal = ({ route }) => {
   const [request, setRequest] = useState(null);
   const [modalVisible, setModalVisible] = useState(true); // Initially visible
-  const [user, setUser] = useState(null);
+  const { user } = useSelector((state) => state.user);
   useEffect(() => {
     // Check if route.params is defined and contains the request data
     if (route && route.params && route.params.request && route.params.user) {
       setRequest(route.params.request);
-      setUser(route.params.user);
       console.log(user);
     } else {
       console.error("Request data is missing or undefined");
