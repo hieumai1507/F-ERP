@@ -353,7 +353,7 @@ const Request = () => {
     ? filteredLeaveRequests
     : leaveRequests.filter((request) => request.status === "Pending");
 
-  const RequestDetailModal = ({ visible, request, user, onClose }) => {
+  const RequestDetailModal = ({ visible, request, onClose }) => {
     if (!visible) {
       return null;
     }
@@ -406,7 +406,7 @@ const Request = () => {
 
               <View style={styles.detailRow}>
                 <Text style={styles.label}>User:</Text>
-                <Text style={styles.value}>{request.userId.name}</Text>
+                <Text style={styles.value}>{userLogin.fullName}</Text>
               </View>
 
               <View style={styles.detailRow}>
