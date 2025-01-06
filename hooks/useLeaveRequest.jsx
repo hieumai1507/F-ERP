@@ -28,7 +28,7 @@ const useLeaveRequests = (userId, userEmail) => {
         return;
       }
       const response = await axios.get(
-        `https://erpapi.folinas.com/api/v1/checkInRequests?page=1&limit=5000`,
+        `https://erpapi.folinas.com/api/v1/checkInRequests?page=1&limit=100&search=&name=&followType=ME`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
