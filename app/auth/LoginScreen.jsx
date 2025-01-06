@@ -60,7 +60,7 @@ const LoginScreen = () => {
       const data = await res.json();
       console.log("API Response data: ", JSON.stringify(data, null, 2));
       if (res.status === 404) {
-        Alert.alert("Error", "User not found!");
+        Alert.alert("Error", "User or password error!");
         return;
       }
       if (res.status === 401) {

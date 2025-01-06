@@ -94,7 +94,7 @@ const RequestDetailModal = ({ visible, request, user, onClose }) => {
                 className="text-base flex-1"
                 style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
               >
-                {moment(request?.requestDate).format("DD/MM/YYYY")}
+                {moment(request?.requestDate).format("HH:mm DD/MM/YYYY")}
               </Text>
             </View>
 

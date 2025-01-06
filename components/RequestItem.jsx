@@ -70,7 +70,7 @@ const RequestItem = ({ item, onPress }) => {
             >
               Ngày
             </Text>
-            {item?.requestTime ? (
+            {item?.requestTime && !item?.goingOutMinutes ? (
               <Text
                 className="text-[#9098B1] w-1/4 text-center text-[10px]"
                 style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
@@ -91,7 +91,7 @@ const RequestItem = ({ item, onPress }) => {
                 className="text-[#9098B1] w-1/4 text-center text-[10px]"
                 style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
               >
-                Thời gian vắng mặt
+                TG vắng mặt
               </Text>
             ) : null}
             <Text
@@ -123,7 +123,7 @@ const RequestItem = ({ item, onPress }) => {
             >
               {moment(item?.requestDate).format("DD/MM/YYYY")}
             </Text>
-            {item?.requestTime ? (
+            {item?.requestTime && !item?.goingOutMinutes ? (
               <Text
                 className="text-gray-800 w-1/4 text-center text-[10px]"
                 style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
