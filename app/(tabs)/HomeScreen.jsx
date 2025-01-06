@@ -112,7 +112,6 @@ const HomeScreen = (props) => {
         }
 
         const data = await response.json();
-        console.log("Received data:", data);
 
         if (data && data.data) {
           // Lọc dữ liệu theo ngày đúng
@@ -133,8 +132,6 @@ const HomeScreen = (props) => {
             const formattedApiDate = `${apiDate.getDate()}/${
               apiDate.getMonth() + 1
             }/${apiDate.getFullYear()}`;
-            console.log("Formatted date:", formattedDate);
-            console.log("API date:", formattedApiDate);
 
             // So sánh định dạng ngày
             return (

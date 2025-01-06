@@ -44,7 +44,6 @@ function AdminScreen({ navigation }) {
     axios
       .get(`${SERVER_URI}/get-all-user`)
       .then((res) => {
-        console.log(res.data);
         setAllUserData(res.data.data);
       })
       .catch((error) => {
@@ -58,15 +57,12 @@ function AdminScreen({ navigation }) {
     setTimeout(() => {
       setRefreshing(false);
       setLoading(false);
-      console.log("refresh data");
     }, 2000);
   }, []);
 
   async function getData() {
     const token = await AsyncStorage.getItem("token");
-    console.log(token);
     axios.post(`${SERVER_URI}/userdata`, { token: token }).then((res) => {
-      console.log(res.data);
       setUserData(res.data.data);
     });
   }
@@ -185,7 +181,6 @@ function AdminScreen({ navigation }) {
 
   function deleteUser(data) {
     axios.post(`${SERVER_URI}/delete-user`, { id: data._id }).then((res) => {
-      console.log(res.data);
       if (res.data.status == "Ok") {
         Alert.alert("User deleted");
         getAllData();

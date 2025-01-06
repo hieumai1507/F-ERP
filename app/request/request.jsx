@@ -10,11 +10,9 @@ import {
   Alert,
   SafeAreaView,
   Modal,
-  StyleSheet,
   ScrollView,
 } from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import axios from "axios";
 import moment from "moment";
@@ -24,23 +22,20 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import fonts from "@/constants/fonts";
 import { LinearGradient } from "expo-linear-gradient";
 import Loading from "@/components/Loading";
-import { Button } from "@rneui/themed";
 
 const Request = () => {
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState(moment()); // Changed to moment object
-  const [showMonthPicker, setShowMonthPicker] = useState(false); // State for showing month picker
+  const [selectedMonth, setSelectedMonth] = useState(moment());
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [currentUser, setCurrentUser] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [showMyRequests, setShowMyRequests] = useState(true);
 
-  const [showMyRequests, setShowMyRequests] = useState(true); // Track selected button
-
-  const userEmail = useSelector((state) => state.auth.user?.email); // Get email from Redux
+  const userEmail = useSelector((state) => state.auth.user?.email);
   const userLogin = useSelector((state) => state.auth.user);
   const userId = userLogin._id;
 
@@ -54,10 +49,9 @@ const Request = () => {
   };
 
   const lastSixMonths = generateLastSixMonths();
-  const monthStrings = lastSixMonths.map((month) => month.format("MMMM YYYY")); // Array of formatted strings
+  const monthStrings = lastSixMonths.map((month) => month.format("MMMM YYYY"));
 
   useEffect(() => {
-    // Set your department list here
     setDepartments([
       "Accountant",
       "Admin",
@@ -97,29 +91,26 @@ const Request = () => {
     ]);
 
     if (userEmail && userId) {
-      // Only fetch if userEmail exists
       fetchLeaveRequests();
     }
-  }, [userEmail, userId]); // Add userEmail to the dependency array
+  }, [userEmail, userId]);
+
   const fetchLeaveRequests = async () => {
-    setLoading(true); // Set loading to true before fetching
+    setLoading(true);
     setRefreshing(true);
     try {
-      const token = await AsyncStorage.getItem("token"); // Get token from AsyncStorage
-
+      const token = await AsyncStorage.getItem("token");
       if (!token) {
-        console.error("Token not found in AsyncStorage, but continuing anyway");
-        setLoading(false); // Set loading to false if token not found
+        console.error("Token not found in AsyncStorage");
+        setLoading(false);
         setRefreshing(false);
         return;
       }
       const response = await axios.get(
         `https://erpapi.folinas.com/api/v1/checkInRequests?page=1&limit=2000`,
         {
-          // New route
-
           headers: {
-            Authorization: `Bearer ${token}`, // Add Bearer prefix
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -138,14 +129,14 @@ const Request = () => {
         );
       }
     } catch (error) {
-      //error handling
       console.error("Error fetching leave requests", error);
-      Alert.alert("Error", error.message); //network error
+      Alert.alert("Error", error.message);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
+
   const onRefresh = () => {
     fetchLeaveRequests();
   };
@@ -157,7 +148,7 @@ const Request = () => {
     if (status === "All") {
       return currentUser.filter((req) => {
         const requestDate = moment(req.requestDate);
-        return requestDate.isBetween(startOfMonth, endOfMonth, null, "[]"); // [] includes start and end date
+        return requestDate.isBetween(startOfMonth, endOfMonth, null, "[]");
       }).length;
     } else {
       return currentUser.filter((req) => {
@@ -169,6 +160,7 @@ const Request = () => {
       }).length;
     }
   };
+
   const renderLeaveRequest = ({ item }) => {
     return (
       <TouchableOpacity
@@ -176,18 +168,13 @@ const Request = () => {
           setSelectedRequest(item);
         }}
       >
-        <View className="bg-white rounded-[20px] p-[15px]  shadow-md mt-[10px]  h-[114px] ">
-          {/* Container styles */}
+        <View className="bg-white rounded-[20px] p-4 shadow-md mt-2 h-[114px]">
           <View className="flex-row justify-between items-center mb-2">
-            {/* Header styles */}
             <Text
-              className=" text-[14px] text-[#333434]"
-              style={{
-                fontFamily: fonts["BeVietNam-Medium"],
-              }}
+              className="text-sm text-[#333434]"
+              style={{ fontFamily: fonts["BeVietNam-Medium"] }}
             >
-              {/* Title styles */}
-              Loại: <Text>{item.type}</Text>
+              Loại: <Text>{item?.type}</Text>
             </Text>
             <View
               className={`px-2 py-1 rounded-full text-white 
@@ -205,123 +192,128 @@ const Request = () => {
                             : item.status === "Canceled"
                             ? "bg-orange-50"
                             : ""
-                        }`} // Dynamic status badge styles
+                        }`}
             >
               <Text
-                className={`${
-                  item.status === "Completed"
-                    ? "text-green-400"
-                    : item.status === "Ignored"
-                    ? "text-red-400"
-                    : item.status === "Pending"
-                    ? "text-yellow-400"
-                    : item.status === "Approved"
-                    ? "text-blue-400"
-                    : item.status === "Rejected"
-                    ? "text-gray-400"
-                    : item.status === "Canceled"
-                    ? "text-orange-400"
-                    : ""
-                }`}
-                style={{
-                  fontFamily: fonts["BeVietNamPro-SemiBold"],
-                  fontSize: 12,
-                }}
+                className={`text-xs  
+                  ${
+                    item.status === "Completed"
+                      ? "text-green-400"
+                      : item.status === "Ignored"
+                      ? "text-red-400"
+                      : item.status === "Pending"
+                      ? "text-yellow-400"
+                      : item.status === "Approved"
+                      ? "text-blue-400"
+                      : item.status === "Rejected"
+                      ? "text-gray-400"
+                      : item.status === "Canceled"
+                      ? "text-orange-400"
+                      : ""
+                  }`}
+                style={{ fontFamily: fonts["BeVietNamPro-SemiBold"] }}
               >
-                {item.status}
+                {item?.status}
               </Text>
             </View>
           </View>
-          {/* Table */}
-          <View className="mt-[10px]">
-            <View className="flex-row justify-between  ">
-              {/* Header row styles */}
+
+          <View className="mt-2">
+            <View className="flex-row justify-between">
               <Text
-                className=" text-[#9098B1] w-1/4 text-center"
-                style={{
-                  fontFamily: fonts["BeVietNamPro-Regular"],
-                  fontSize: 12,
-                }}
+                className="text-[#9098B1] w-1/4 text-center text-[10px]"
+                style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
               >
                 TG tạo
               </Text>
               <Text
-                className=" text-[#9098B1] w-1/4 text-center"
-                style={{
-                  fontFamily: fonts["BeVietNamPro-Regular"],
-                  fontSize: 12,
-                }}
+                className="text-[#9098B1] w-1/4 text-center text-[10px]"
+                style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
               >
                 Ngày
               </Text>
+              {item?.requestTime ? (
+                <Text
+                  className="text-[#9098B1] w-1/4 text-center text-[10px]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  Thời gian
+                </Text>
+              ) : null}
+              {item?.absentType ? (
+                <Text
+                  className="text-[#9098B1] w-1/4 text-center text-[10px]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  Loại nghỉ
+                </Text>
+              ) : null}
+              {item?.goingOutMinutes ? (
+                <Text
+                  className="text-[#9098B1] w-1/4 text-center text-[10px]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  Thời gian vắng mặt
+                </Text>
+              ) : null}
               <Text
-                className=" text-[#9098B1] w-1/4 text-center"
-                style={{
-                  fontFamily: fonts["BeVietNamPro-Regular"],
-                  fontSize: 12,
-                }}
-              >
-                Thời gian
-              </Text>
-              <Text
-                className=" text-[#9098B1] w-1/4 text-center"
-                style={{
-                  fontFamily: fonts["BeVietNamPro-Regular"],
-                  fontSize: 12,
-                }}
+                className="text-[#9098B1] w-1/4 text-center text-[10px]"
+                style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
               >
                 Lý do
               </Text>
             </View>
 
             <View className="flex-row justify-between py-2">
-              {/* Data row styles */}
               <View className="w-1/4 items-center">
                 <Text
-                  className="text-gray-800 text-center"
-                  style={{
-                    fontFamily: fonts["BeVietNamPro-Regular"],
-                    fontSize: 10,
-                  }}
+                  className="text-gray-800 text-center text-[10px]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
                 >
                   {moment(item.createdAt).format("DD/MM/YY")}
                 </Text>
                 <Text
-                  className="text-gray-800  text-center"
-                  style={{
-                    fontFamily: fonts["BeVietNamPro-Regular"],
-                    fontSize: 10,
-                  }}
+                  className="text-gray-800 text-center text-[10px]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
                 >
-                  {moment(item.createdAt).format("HH:mm")}
+                  {moment(item?.createdAt).format("HH:mm")}
                 </Text>
               </View>
               <Text
-                className="text-gray-800 w-1/4 text-center"
-                style={{
-                  fontFamily: fonts["BeVietNamPro-Regular"],
-                  fontSize: 10,
-                }}
+                className="text-gray-800 w-1/4 text-center text-[10px]"
+                style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
               >
-                {moment(item.requestDate).format("DD/MM/YYYY")}
+                {moment(item?.requestDate).format("DD/MM/YYYY")}
               </Text>
+              {item?.requestTime ? (
+                <Text
+                  className="text-gray-800 w-1/4 text-center text-[10px]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {item?.requestTime}
+                </Text>
+              ) : null}
+              {item?.absentType ? (
+                <Text
+                  className="text-gray-800 w-1/4 text-center text-[10px]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {item?.absentType}
+                </Text>
+              ) : null}
+              {item?.goingOutMinutes ? (
+                <Text
+                  className="text-gray-800 w-1/4 text-center text-[10px]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {item?.goingOutMinutes}
+                </Text>
+              ) : null}
               <Text
-                className="text-gray-800 w-1/4 text-center"
-                style={{
-                  fontFamily: fonts["BeVietNamPro-Regular"],
-                  fontSize: 10,
-                }}
+                className="text-gray-800 w-1/4 text-center text-[10px]"
+                style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
               >
-                {item.requestTime}
-              </Text>
-              <Text
-                className="text-gray-800 w-1/4 text-center"
-                style={{
-                  fontFamily: fonts["BeVietNamPro-Regular"],
-                  fontSize: 10,
-                }}
-              >
-                {item.reason}
+                {item?.reason}
               </Text>
             </View>
           </View>
@@ -329,20 +321,18 @@ const Request = () => {
       </TouchableOpacity>
     );
   };
-
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View className="flex-1 justify-center items-center">
         <Loading />
       </View>
     );
   }
 
-  // Filter requests based on the selected month
   const filteredLeaveRequests = currentUser.filter((req) => {
     const startOfMonth = selectedMonth.clone().startOf("month");
     const endOfMonth = selectedMonth.clone().endOf("month");
-    const requestDate = moment(req.requestDate);
+    const requestDate = moment(req?.requestDate);
     return (
       requestDate.isBetween(startOfMonth, endOfMonth, null, "[]") &&
       (selectedStatus === "All" || req.status === selectedStatus)
@@ -351,18 +341,13 @@ const Request = () => {
 
   const displayedRequests = showMyRequests
     ? filteredLeaveRequests
-    : leaveRequests.filter((request) => request.status === "Pending");
+    : leaveRequests.filter((request) => request?.status === "Pending");
 
   const RequestDetailModal = ({ visible, request, onClose }) => {
-    if (!visible) {
-      return null;
-    }
-
+    if (!visible) return null;
     if (!request) {
       return (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
+        <View className="flex-1 justify-center items-center">
           <Loading />
         </View>
       );
@@ -375,22 +360,21 @@ const Request = () => {
         visible={visible}
         onRequestClose={onClose}
       >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <View style={styles.headerContainer}>
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="m-5 bg-white rounded-[20px] p-6 shadow-md w-[90%] max-h-[80%]">
+            <View className="flex-row justify-between items-center mb-2">
               <TouchableOpacity
                 onPress={onClose}
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
-                  borderRadius: 50,
-                  padding: 8,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
+                className="bg-white/20 rounded-full p-2 justify-center items-center"
               >
                 <Ionicons name="close" size={24} color="#000" />
               </TouchableOpacity>
-              <Text style={styles.modalHeaderText}>Request Details</Text>
+              <Text
+                className="text-xl"
+                style={{ fontFamily: fonts["BeVietNamPro-SemiBold"] }}
+              >
+                Request Details
+              </Text>
             </View>
 
             <ScrollView
@@ -399,65 +383,162 @@ const Request = () => {
                 paddingVertical: 20,
               }}
             >
-              <View style={styles.detailRow}>
-                <Text style={styles.label}>Request ID:</Text>
-                <Text style={styles.value}>{request._id}</Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <Text style={styles.label}>User:</Text>
-                <Text style={styles.value}>{userLogin.fullName}</Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <Text style={styles.label}>Loại:</Text>
-                <Text style={styles.value}>{request.type}</Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <Text style={styles.label}>Request Date:</Text>
-                <Text style={styles.value}>
-                  {moment(request.requestDate).format("DD/MM/YYYY")}
+              <View className="flex-row items-start mb-2">
+                <Text
+                  className="text-base w-[100px] text-[#737373]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  Request ID:
+                </Text>
+                <Text
+                  className="text-base flex-1"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {request?._id}
                 </Text>
               </View>
 
-              <View style={styles.detailRow}>
-                <Text style={styles.label}>Request Time:</Text>
-                <Text style={styles.value}>
-                  {moment(request.createdAt).format("HH:mm:ss")}
+              <View className="flex-row items-start mb-2">
+                <Text
+                  className="text-base w-[100px] text-[#737373]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  User:
+                </Text>
+                <Text
+                  className="text-base flex-1"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {userLogin?.fullName}
                 </Text>
               </View>
 
-              <View style={styles.detailRow}>
-                <Text style={styles.label}>Lý do:</Text>
-                <Text style={styles.value}>{request.reason}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.label}>Trạng thái:</Text>
-                <Text style={styles.value}>{request.status}</Text>
+              <View className="flex-row items-start mb-2">
+                <Text
+                  className="text-base w-[100px] text-[#737373]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  Loại:
+                </Text>
+                <Text
+                  className="text-base flex-1"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {request?.type}
+                </Text>
               </View>
 
-              <View style={styles.detailRow}>
-                <Text style={styles.label}>Absent Type:</Text>
-                <Text style={styles.value}>{request.absentType}</Text>
+              <View className="flex-row items-start mb-2">
+                <Text
+                  className="text-base w-[100px] text-[#737373]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  Request Date:
+                </Text>
+                <Text
+                  className="text-base flex-1"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {moment(request?.requestDate).format("DD/MM/YYYY")}
+                </Text>
               </View>
 
-              {/* Additional details as needed */}
+              <View className="flex-row items-start mb-2">
+                <Text
+                  className="text-base w-[100px] text-[#737373]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  Request Time:
+                </Text>
+                <Text
+                  className="text-base flex-1"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {request?.requestTime}
+                </Text>
+              </View>
+
+              <View className="flex-row items-start mb-2">
+                <Text
+                  className="text-base w-[100px] text-[#737373]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  Lý do:
+                </Text>
+                <Text
+                  className="text-base flex-1"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {request?.reason}
+                </Text>
+              </View>
+              <View className="flex-row items-start mb-2">
+                <Text
+                  className="text-base w-[100px] text-[#737373]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  Trạng thái:
+                </Text>
+                <Text
+                  className="text-base flex-1"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {request?.status}
+                </Text>
+              </View>
+
+              <View className="flex-row items-start mb-2">
+                <Text
+                  className="text-base w-[100px] text-[#737373]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  Absent Type:
+                </Text>
+                <Text
+                  className="text-base flex-1"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {request?.absentType}
+                </Text>
+              </View>
+              <View className="flex-row items-start mb-2">
+                <Text
+                  className="text-base w-[100px] text-[#737373]"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  Going Out Minutes:
+                </Text>
+                <Text
+                  className="text-base flex-1"
+                  style={{ fontFamily: fonts["BeVietNamPro-Regular"] }}
+                >
+                  {request?.goingOutMinutes}
+                </Text>
+              </View>
             </ScrollView>
 
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-evenly",
-                width: "100%",
-                paddingVertical: 10,
-              }}
-            >
-              <TouchableOpacity style={[styles.button, styles.buttonApprove]}>
-                <Text style={styles.textStyle}>Phê duyệt</Text>
+            <View className="flex-row justify-evenly w-full py-2">
+              <TouchableOpacity
+                className="rounded-md p-2 bg-[#2196F3] items-center"
+                // style={styles.buttonApprove}
+              >
+                <Text
+                  className="text-white font-bold"
+                  // style={styles.textStyle}
+                >
+                  Phê duyệt
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, styles.buttonReject]}>
-                <Text style={styles.textStyle}>Từ chối</Text>
+              <TouchableOpacity
+                className="rounded-md p-2 bg-[#f44336] items-center"
+                // style={styles.buttonReject}
+              >
+                <Text
+                  className="text-white font-bold"
+                  // style={styles.textStyle}
+                >
+                  Từ chối
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -470,22 +551,19 @@ const Request = () => {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1 bg-[#F5F5F5]"
-      keyboardVerticalOffset={100} // Adjust as needed
+      keyboardVerticalOffset={100}
     >
       <SafeAreaView>
         <LinearGradient
           colors={["#033495", "#0654B2", "#005AB4", "#38B6FF"]}
-          locations={[0, 0.16, 0.32, 1]} // Vị trí tương ứng với phần trăm
+          locations={[0, 0.16, 0.32, 1]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }} // Hoặc điều chỉnh theo hướng gradient mong muốn
+          end={{ x: 1, y: 1 }}
           className="w-full h-[109px] justify-between flex-row items-center"
         >
           <TouchableOpacity
-            className=" ml-[15px] w-[30px] h-[30px]  border-none rounded-[6px] justify-center items-center"
+            className=" ml-4 w-[30px] h-[30px]  border-none rounded-md justify-center items-center bg-white/20"
             onPress={() => router.back()}
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-            }}
           >
             <Ionicons name="chevron-back" size={18} color="#FFFFFF" />
           </TouchableOpacity>
@@ -500,7 +578,7 @@ const Request = () => {
           </Text>
         </LinearGradient>
       </SafeAreaView>
-      {/*  */}
+
       <View className="flex-1 bg-[#F5F5F5] p-4">
         <View className="flex-row flex-wrap justify-between mb-4 bg-[#FFFFFF] rounded-lg">
           {[
@@ -525,27 +603,16 @@ const Request = () => {
           ))}
         </View>
 
-        <View className="pr-[12px]">
+        <View className="pr-3">
           <View className="flex-row mb-4">
             <View className="flex-1">
-              {/* <CustomPicker
-                items={departments}
-                selectedValue={selectedDepartment}
-                onValueChange={setSelectedDepartment}
-                placeholder="Department"
-              />
-              <MaterialIcons
-                name="keyboard-arrow-down"
-                size={8}
-                color="#94A3B8"
-              /> */}
-              <View className="bg-white border border-[#CBD5E1] rounded-[6px] h-[40px] w-[130px]">
+              <View className="bg-white border border-[#CBD5E1] rounded-md h-10 w-[130px]">
                 <Text className="top-[10px] ml-[25px]">
                   {userLogin.role.name}
                 </Text>
               </View>
             </View>
-            <View className="flex-1 w-[219px] h-[40px]">
+            <View className="flex-1 w-[219px] h-10">
               <CustomPicker
                 items={monthStrings}
                 selectedValue={selectedMonth.format("MMMM YYYY")}
@@ -564,7 +631,7 @@ const Request = () => {
 
         <View className=" w-[360px] h-[38px] justify-center pl-2">
           <Text
-            className=" text-[14px] mb-2"
+            className=" text-sm mb-2"
             style={{
               fontFamily: fonts["BeVietNamPro-SemiBold"],
               color: "#331A1A",
@@ -573,58 +640,12 @@ const Request = () => {
             Danh sách Xin phép
           </Text>
         </View>
-        {/* <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-around",
-            marginBottom: 10,
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => {
-              setShowMyRequests(true);
-            }}
-            style={[
-              styles.filterButton,
-              showMyRequests && styles.filterButtonActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterButtonText,
-                showMyRequests && styles.filterButtonTextActive,
-              ]}
-            >
-              Của tôi
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setShowMyRequests(false);
-            }}
-            style={[
-              styles.filterButton,
-              !showMyRequests && styles.filterButtonActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterButtonText,
-                !showMyRequests && styles.filterButtonTextActive,
-              ]}
-            >
-              Cần duyệt
-            </Text>
-          </TouchableOpacity>
-        </View> */}
+
         <FlatList
           data={displayedRequests}
           renderItem={renderLeaveRequest}
           keyExtractor={(item) => item._id}
-          style={{
-            marginTop: 20,
-            marginBottom: 100,
-          }}
+          className=" mb-28"
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -637,18 +658,18 @@ const Request = () => {
           onClose={() => setSelectedRequest(null)}
         />
       </View>
+
       <TouchableOpacity
-        className="bg-[#0B6CA7] rounded-[6px] absolute bottom-4 right-4 flex-row items-center justify-center w-[109px] h-[40px]"
+        className="bg-[#0B6CA7] rounded-md absolute bottom-4 right-4 flex-row items-center justify-center w-[109px] h-10"
         onPress={() => {
           router.push("/request/createRequest");
         }}
       >
         <Ionicons name="add-circle-outline" size={24} color="#FFFFFF" />
         <Text
-          className="ml-2 text-[#FFFFFF]"
+          className="ml-2 text-[#FFFFFF] text-sm"
           style={{
             fontFamily: fonts["Inter-Medium"],
-            fontSize: 14,
           }}
         >
           Tạo mới
@@ -657,110 +678,5 @@ const Request = () => {
     </KeyboardAvoidingView>
   );
 };
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  centeredView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 25,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    width: "90%",
-    maxHeight: "80%",
-  },
-  headerContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  modalHeaderText: {
-    fontFamily: fonts["BeVietNamPro-SemiBold"],
-    fontSize: 20,
-  },
-  detailRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 10,
-  },
-  label: {
-    fontFamily: fonts["BeVietNamPro-Regular"],
-    fontSize: 14,
-    width: 100,
-    color: "#737373",
-  },
-  value: {
-    fontFamily: fonts["BeVietNamPro-Regular"],
-    fontSize: 14,
-    flex: 1, // Allow value to wrap if needed
-  },
-  button: {
-    borderRadius: 5,
-    padding: 10,
-    elevation: 2,
-    alignItems: "center",
-  },
-  buttonApprove: {
-    backgroundColor: "#2196F3",
-  },
-  buttonReject: {
-    backgroundColor: "#f44336",
-  },
-  textStyle: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  pickerContainer: {
-    backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
-    borderRadius: 6,
-    height: 40,
-    justifyContent: "center",
-  },
-  pickerText: {
-    fontFamily: fonts["BeVietNamPro-Regular"],
-    fontSize: 14,
-    paddingHorizontal: 10,
-    color: "#333434",
-  },
-  filterButton: {
-    padding: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
-    backgroundColor: "white",
-  },
-  filterButtonActive: {
-    backgroundColor: "#F1F5F9",
-  },
-  filterButtonText: {
-    color: "#333434",
-    fontFamily: fonts["BeVietNamPro-Regular"],
-    fontSize: 14,
-  },
-  filterButtonTextActive: {
-    fontFamily: fonts["BeVietNamPro-Regular"],
-    fontSize: 14,
-  },
-});
 
 export default Request;
