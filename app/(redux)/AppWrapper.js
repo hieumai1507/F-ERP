@@ -3,9 +3,29 @@ import { useDispatch } from "react-redux";
 import { Stack } from "expo-router/stack";
 import { loadUser } from "./authSlice";
 import { ToastProvider } from "react-native-toast-notifications";
+import useFonts from "expo-font";
+import Loading from "@/components/Loading";
 function AppWrapper() {
   const dispatch = useDispatch();
+  const [loaded, error] = useFonts({
+    "BeVietNamPro-SemiBold": require("@/assets/fonts/BeVietNamPro-SemiBold.tff"),
+    "BeVietNamPro-Regular": require("@/assets/fonts/BeVietNamPro-Regular.tff"),
+    "BeVietNamPro-Medium": require("@/assets/fonts/BeVietNamPro-Medium.tff"),
+    "BeVietNam-Medium": require("@/assets/fonts/BeVietNam-Medium.tff"),
+    "Inter-Medium": require("@/assets/fonts/Inter_18pt-Medium.tff"),
+    "Inter-Regular": require("@/assets/fonts/Inter_18pt-Regular.tff"),
+  });
+  useEffect(() => {
+    if (loaded || error) {
+      <View className="flex-1 justify-center items-center">
+        <Loading />
+      </View>;
+    }
+  }, [loaded, error]);
 
+  if (!loaded && !error) {
+    return null;
+  }
   useEffect(() => {
     dispatch(loadUser());
   }, [dispatch]);
