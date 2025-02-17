@@ -52,7 +52,7 @@ const LoginScreen = () => {
     }
 
     try {
-      const res = await fetch(process.env.LOGIN_URL, {
+      const res = await fetch("https://erpapi.folinas.com/api/v1/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password }),

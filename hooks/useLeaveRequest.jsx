@@ -27,11 +27,14 @@ const useLeaveRequests = (userId, userEmail) => {
         setRefreshing(false);
         return;
       }
-      const response = await axios.get(process.env.ALL_REQUESTS_URL, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        `https://erpapi.folinas.com/api/v1/checkInRequests?page=1&limit=100&search=&name=&followType=ME`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.status === 200) {
         setLeaveRequests(response.data.data); // Lưu toàn bộ data

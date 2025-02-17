@@ -49,7 +49,7 @@ export default function CreateRequestScreen() {
       const token = await AsyncStorage.getItem("token");
       const roleName = encodeURIComponent(userLogin.role.name); // Mã hóa giá trị roleName
       const response = await axios.get(
-        `${process.env.DOMAIN_URL}/users/approvable-users?roleName=${roleName}`,
+        `https://erpapi.folinas.com/api/v1/users/approvable-users?roleName=${roleName}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -181,7 +181,7 @@ export default function CreateRequestScreen() {
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await axios.post(
-        process.env.CHECKIN_LIST_URL,
+        "https://erpapi.folinas.com/api/v1/checkInRequests",
         requestData,
         {
           headers: {
