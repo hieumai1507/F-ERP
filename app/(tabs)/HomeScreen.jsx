@@ -97,7 +97,7 @@ const HomeScreen = (props) => {
         const formattedFromDate = formatDateForAPI(startOfDay);
         const formattedToDate = formatDateForAPI(endOfDay);
 
-        const API_URL = `https://erpapi.folinas.com/api/v1/checkIns/${user._id}/detail?from=${formattedFromDate}&to=${formattedToDate}&page=1&limit=1`;
+        const API_URL = `${process.env.DOMAIN_URL}/${user._id}/detail?from=${formattedFromDate}&to=${formattedToDate}&page=1&limit=1`;
 
         const response = await fetch(API_URL, {
           method: "GET",
